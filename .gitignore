@@ -1,0 +1,42 @@
+# Dart / Flutter generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+.pub-cache/
+build/
+coverage/
+
+# Android local state and signing secrets
+android/.gradle/
+android/local.properties
+android/key.properties
+android/keystore/
+*.jks
+*.keystore
+*.p12
+
+# IDE and editor state
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Python helpers
+__pycache__/
+*.py[cod]
+
+# OS and tool noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+*.tmp
+*.swp

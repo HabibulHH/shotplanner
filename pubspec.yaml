@@ -1,0 +1,31 @@
+name: shotkit
+description: An offline-first shot list and on-set companion for filmmakers.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  drift: ^2.34.2
+  flutter:
+    sdk: flutter
+  flutter_image_compress: ^2.5.0
+  image_picker: ^1.2.3
+  in_app_purchase: ^3.3.0
+  path: ^1.9.1
+  path_provider: ^2.1.6
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  sqlite3_flutter_libs: ^0.6.0+eol
+  wakelock_plus: ^1.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.34.0
+  build_runner: ^2.15.1
+
+flutter:
+  uses-material-design: true
