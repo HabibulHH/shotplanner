@@ -44,5 +44,5 @@ We may update this policy when ShotKit's features or legal obligations change. T
 
 Habibul Hasan
 
-habibul.hasan.hira@gmail.com
+thehirahasan@gmail.com
 
