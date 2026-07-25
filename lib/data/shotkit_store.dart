@@ -4,26 +4,20 @@ import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 
 import 'app_database.dart';
-import 'entitlement_service.dart';
 import 'media_service.dart';
 import 'models.dart';
 import 'templates.dart';
 
 class ShotKitStore extends ChangeNotifier {
-  ShotKitStore({AppDatabase? database, this.initializePurchases = true})
-      : database = database ?? AppDatabase() {
+  ShotKitStore({AppDatabase? database}) : database = database ?? AppDatabase() {
     media = MediaService();
-    entitlement = EntitlementService(onUnlocked: () => setPro(true));
-    ready = _initialize();
+    ready = _load();
   }
 
   final AppDatabase database;
-  final bool initializePurchases;
   late final MediaService media;
-  late final EntitlementService entitlement;
   final List<Project> projects = [];
   late final Future<void> ready;
-  bool isPro = false;
   int _nextId = 1000;
 
   int nextId() => _nextId++;
@@ -31,18 +25,8 @@ class ShotKitStore extends ChangeNotifier {
       projects.where((project) => !project.isArchived).toList();
   List<Project> get archivedProjects =>
       projects.where((project) => project.isArchived).toList();
-  bool get canCreateProject => isPro || activeProjects.isEmpty;
-  bool canCreateScene(Project project) => isPro || project.scenes.length < 3;
-
-  Future<void> _initialize() async {
-    await _load();
-    if (initializePurchases) {
-      unawaited(entitlement.initialize().then((_) => notifyListeners()));
-    }
-  }
 
   Future<void> _load() async {
-    isPro = (await database.setting('isPro')) == 'true';
     final projectRows = await (database.select(database.dbProjects)
           ..orderBy([(row) => OrderingTerm.desc(row.updatedAt)]))
         .get();
@@ -107,12 +91,6 @@ class ShotKitStore extends ChangeNotifier {
           .map((shot) => shot.id),
     ];
     if (ids.isNotEmpty) _nextId = ids.reduce((a, b) => a > b ? a : b) + 1;
-    notifyListeners();
-  }
-
-  Future<void> setPro(bool value) async {
-    isPro = value;
-    await database.setSetting('isPro', value.toString());
     notifyListeners();
   }
 
@@ -221,9 +199,8 @@ class ShotKitStore extends ChangeNotifier {
     });
   }
 
-  Future<Scene?> addScene(
+  Future<Scene> addScene(
       Project project, String title, String location, TimeOfDayTag tag) async {
-    if (!canCreateScene(project)) return null;
     final scene = Scene(
         id: nextId(),
         title: title,
@@ -248,7 +225,6 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<void> duplicateScene(Project project, Scene source) async {
-    if (!canCreateScene(project)) return;
     final scene = Scene(
       id: nextId(),
       title: '${source.title} copy',
@@ -315,8 +291,7 @@ class ShotKitStore extends ChangeNotifier {
     await _touch(project);
   }
 
-  Future<Project?> addProject(String title, String template) async {
-    if (!canCreateProject) return null;
+  Future<Project> addProject(String title, String template) async {
     final project = Project(
       id: nextId(),
       title: title,
@@ -408,7 +383,6 @@ class ShotKitStore extends ChangeNotifier {
 
   @override
   void dispose() {
-    entitlement.dispose();
     unawaited(database.close());
     super.dispose();
   }

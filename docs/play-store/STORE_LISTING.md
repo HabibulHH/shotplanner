@@ -39,7 +39,7 @@ PRODUCTION FEATURES
 • Detailed and compact PDF shot-list export and sharing
 • Local-first SQLite storage
 
-The free version supports one active project and up to three scenes per project. ShotKit Pro is an optional one-time in-app purchase that unlocks unlimited projects and scenes. Purchases are processed securely through Google Play.
+ShotKit is completely free: unlimited projects, unlimited scenes, all templates, and watermark-free PDF exports. No account, no subscription, no in-app purchases.
 
 Plan the frame. Own the set.
 
@@ -54,16 +54,6 @@ Alternative to evaluate: Photography
 Shot list, filmmaking, pre-production, cinematography, director tools, video production, on-set workflow.
 
 Do not keyword-stuff these terms into the title or descriptions.
-
-## One-time product copy
-
-Product ID: `pro_unlock`
-
-Name: ShotKit Pro
-
-Description: Unlock unlimited projects and scenes with one purchase.
-
-Purchase type: Buy, non-consumable
 
 ## Release name and notes
 

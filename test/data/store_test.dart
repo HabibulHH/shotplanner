@@ -8,11 +8,11 @@ import 'package:shotkit/data/shotkit_store.dart';
 void main() {
   test('persists shot completion and reorder into SQLite', () async {
     final database = AppDatabase(NativeDatabase.memory());
-    final store = ShotKitStore(database: database, initializePurchases: false);
+    final store = ShotKitStore(database: database);
     await store.ready;
-    final project = (await store.addProject('Test', 'Blank'))!;
+    final project = await store.addProject('Test', 'Blank');
     final scene =
-        (await store.addScene(project, 'Scene', 'Stage', TimeOfDayTag.day))!;
+        await store.addScene(project, 'Scene', 'Stage', TimeOfDayTag.day);
     final first = Shot(
         id: store.nextId(),
         description: 'First',
@@ -41,21 +41,17 @@ void main() {
     store.dispose();
   });
 
-  test('enforces the free project and scene limits at creation time', () async {
-    final store = ShotKitStore(
-        database: AppDatabase(NativeDatabase.memory()),
-        initializePurchases: false);
+  test('allows unlimited projects and scenes', () async {
+    final store = ShotKitStore(database: AppDatabase(NativeDatabase.memory()));
     await store.ready;
-    final project = (await store.addProject('Free project', 'Blank'))!;
-    expect(await store.addProject('Second project', 'Blank'), isNull);
-    expect(await store.addScene(project, 'One', 'Set', TimeOfDayTag.day),
-        isNotNull);
-    expect(await store.addScene(project, 'Two', 'Set', TimeOfDayTag.day),
-        isNotNull);
-    expect(await store.addScene(project, 'Three', 'Set', TimeOfDayTag.day),
-        isNotNull);
-    expect(
-        await store.addScene(project, 'Four', 'Set', TimeOfDayTag.day), isNull);
+    final project = await store.addProject('First project', 'Blank');
+    expect(await store.addProject('Second project', 'Blank'), isNotNull);
+    for (var index = 0; index < 4; index++) {
+      expect(
+          await store.addScene(project, 'Scene $index', 'Set', TimeOfDayTag.day),
+          isNotNull);
+    }
+    expect(project.scenes.length, 4);
     store.dispose();
   });
 }

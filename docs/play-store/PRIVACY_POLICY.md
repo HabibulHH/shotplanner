@@ -1,16 +1,16 @@
-# ShotKit Privacy Policy — publishing draft
+# ShotKit Privacy Policy
 
-Effective date: [EFFECTIVE DATE]
+Effective date: 24 July 2026
 
-ShotKit is provided by [LEGAL DEVELOPER OR COMPANY NAME] ("we", "us", or "our"). This policy explains how the ShotKit Android application handles information.
+ShotKit is provided by Habibul Hasan ("we", "us", or "our"). This policy explains how the ShotKit Android application handles information.
 
 ## Information stored on your device
 
-ShotKit stores projects, scenes, shot details, notes, preferences, completion status, and purchase-entitlement status locally on your device. When you choose a reference image, ShotKit imports an app-local copy selected through the Android system picker. We do not operate an account system or a server that receives this production content.
+ShotKit stores projects, scenes, shot details, notes, preferences, and completion status locally on your device. When you choose a reference image, ShotKit imports an app-local copy selected through the Android system picker. We do not operate an account system or a server that receives this production content.
 
-## Google Play purchases
+## Purchases
 
-ShotKit offers an optional one-time purchase called ShotKit Pro. Purchase processing is provided by Google Play. The app receives product, purchase-status, and entitlement information needed to complete and restore the purchase. Google handles payment information under Google's own privacy policy. We do not receive or store your full payment-card details.
+ShotKit is completely free. It contains no in-app purchases, subscriptions, or paid features.
 
 ## Exporting and sharing
 
@@ -22,7 +22,7 @@ The current version of ShotKit does not include advertising SDKs, analytics SDKs
 
 ## Permissions
 
-ShotKit uses network access to communicate with Google Play Billing. Reference images are selected through Android's system photo picker; ShotKit does not request broad access to your media library. The app does not request location, contacts, microphone, or camera permissions.
+Reference images are selected through Android's system photo picker; ShotKit does not request broad access to your media library. The app does not request location, contacts, microphone, or camera permissions.
 
 ## Retention and deletion
 
@@ -42,13 +42,7 @@ We may update this policy when ShotKit's features or legal obligations change. T
 
 ## Contact
 
-[LEGAL DEVELOPER OR COMPANY NAME]
+Habibul Hasan
 
-[PUBLIC SUPPORT EMAIL]
-
-[BUSINESS ADDRESS, IF REQUIRED FOR YOUR ACCOUNT OR REGION]
-
-Public policy URL: [HTTPS URL TO HOSTED COPY]
-
-> Publishing note: replace every bracketed field and have the final policy reviewed for the countries where the app will be offered. This draft is not legal advice.
+habibul.hasan.hira@gmail.com
 

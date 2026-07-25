@@ -9,7 +9,6 @@ void main() {
       (tester) async {
     final store = ShotKitStore(
       database: AppDatabase(NativeDatabase.memory()),
-      initializePurchases: false,
     );
     await store.ready;
     final project = await store.addProject('Rahim & Ayesha', 'Wedding');

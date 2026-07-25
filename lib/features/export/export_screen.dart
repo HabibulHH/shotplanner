@@ -183,7 +183,6 @@ class _ExportScreenState extends State<ExportScreen> {
         widget.project,
         detailed ? PdfLayout.detailed : PdfLayout.compact,
         includeCompleted: includeCompleted,
-        isPro: widget.store.isPro,
       );
       if (!mounted) return;
       await Navigator.push(

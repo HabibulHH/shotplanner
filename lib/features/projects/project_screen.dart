@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/shotkit_widgets.dart';
-import '../../core/widgets/pro_upsell.dart';
 import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
 import '../export/export_screen.dart';
@@ -124,15 +123,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
                               child: _SceneCard(
                             number: index + 1,
                             scene: scene,
-                            onDuplicate: () async {
-                              if (!widget.store.canCreateScene(project)) {
-                                await showProUpsell(context, widget.store,
-                                    reason:
-                                        'The free kit supports three scenes per project.');
-                                return;
-                              }
-                              await widget.store.duplicateScene(project, scene);
-                            },
+                            onDuplicate: () =>
+                                widget.store.duplicateScene(project, scene),
                             onDelete: () => _confirmDeleteScene(scene),
                             onTap: () => Navigator.push(
                               context,
@@ -196,15 +188,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
   }
 
   Future<void> _showAddScene() async {
-    if (!widget.store.canCreateScene(widget.project)) {
-      await showProUpsell(
-        context,
-        widget.store,
-        reason:
-            'The free kit supports three scenes per project. Unlock Pro for unlimited scenes.',
-      );
-      return;
-    }
     final title = TextEditingController();
     final location = TextEditingController();
     var tag = TimeOfDayTag.day;
@@ -297,8 +280,11 @@ class _ProjectScreenState extends State<ProjectScreen> {
         ),
       ),
     );
-    title.dispose();
-    location.dispose();
+    // Delay disposal until the sheet's exit animation has released the fields.
+    Future<void>.delayed(const Duration(seconds: 1), () {
+      title.dispose();
+      location.dispose();
+    });
   }
 
   Future<void> _confirmDeleteScene(Scene scene) async {

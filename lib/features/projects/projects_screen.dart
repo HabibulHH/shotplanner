@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/shotkit_widgets.dart';
-import '../../core/widgets/pro_upsell.dart';
 import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
 import '../onset/onset_screen.dart';
@@ -184,17 +183,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _showNewProject() async {
-    if (!widget.store.canCreateProject) {
-      await showProUpsell(
-        context,
-        widget.store,
-        reason:
-            'The free kit includes one active project. Unlock Pro for unlimited productions.',
-      );
-      return;
-    }
     final titleController = TextEditingController();
-    String template = widget.store.isPro ? 'Wedding' : 'Blank';
+    String template = 'Wedding';
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -259,22 +249,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   item,
                 ) {
                   final selected = template == item;
-                  final locked = !widget.store.isPro && item != 'Blank';
                   return ChoiceChip(
-                    avatar: locked
-                        ? const Icon(Icons.lock_outline, size: 15)
-                        : null,
                     label: Text(item),
                     selected: selected,
-                    onSelected: (_) {
-                      if (locked) {
-                        showProUpsell(context, widget.store,
-                            reason:
-                                'Production templates are included with ShotKit Pro.');
-                        return;
-                      }
-                      setSheetState(() => template = item);
-                    },
+                    onSelected: (_) => setSheetState(() => template = item),
                     selectedColor: ShotKitColors.tape,
                     labelStyle: TextStyle(
                       color: selected
@@ -309,7 +287,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
       ),
     );
-    titleController.dispose();
+    // Delay disposal until the sheet's exit animation has released the field.
+    Future<void>.delayed(const Duration(seconds: 1), titleController.dispose);
   }
 }
 

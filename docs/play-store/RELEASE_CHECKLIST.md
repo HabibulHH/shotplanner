@@ -15,20 +15,19 @@ Last reviewed: 18 July 2026
 - Play Store icon: `assets/play-store/app-icon-512.png`
 - Feature graphic: `assets/play-store/feature-graphic-1024x500.png`
 - Store copy, privacy draft, data-safety worksheet, and tester guide
-- Permission audit: Billing, Internet, Network State, and Android's generated receiver permission only
+- Permission audit: Internet, Network State, and Android's generated receiver permission only
 - No broad storage, photos, camera, microphone, contacts, or location permission
 
 ## Decisions required before the first Play upload
 
 - [ ] Confirm `com.appmachine.shotkit` is the permanent package ID. It cannot be changed for the same Play listing after the first artifact is uploaded.
 - [ ] Replace every bracketed placeholder in `PRIVACY_POLICY.md`, especially legal developer name, contact email, and public privacy-policy URL.
-- [ ] Decide the one-time ShotKit Pro price and supported countries.
 - [ ] Back up `android/keystore/shotkit-upload.jks` and `android/key.properties` in a secure password manager or encrypted vault. Neither file is committed to Git.
 - [ ] Confirm whether the Play developer account is Personal or Organization and complete current developer verification.
 
 ## Play Console setup
 
-1. Create the app in Play Console with default language `English (United States)`, app type **App**, and pricing **Free**. A free app cannot later become paid; ShotKit monetizes through its one-time product.
+1. Create the app in Play Console with default language `English (United States)`, app type **App**, and pricing **Free**. The app is fully free with no in-app purchases.
 2. Enroll in **Play App Signing** and use the generated ShotKit key as the upload key.
 3. Complete the Main store listing using `STORE_LISTING.md` and the assets in `assets/play-store/`.
 4. Host the final privacy policy on a public HTTPS URL and enter that URL in App content and the store listing.
@@ -38,8 +37,7 @@ Last reviewed: 18 July 2026
    - Target audience: professional/general filmmaking users; do not select child-directed groups unless the product strategy changes
    - Content rating: complete IARC accurately; the current app itself contains no violent, sexual, gambling, or user-generated content
    - Data safety: use `DATA_SAFETY.md`, then re-check it against the exact uploaded bundle
-6. Create and activate a non-consumable one-time product with exact product ID `pro_unlock`. Add a backwards-compatible **Buy** purchase option, regional pricing, name `ShotKit Pro`, and an accurate description.
-7. Add license testers, upload the signed AAB to Internal testing, and verify purchase, cancel, pending, restore, reinstall, and offline flows.
+6. Add testers, upload the signed AAB to Internal testing, and verify install, reinstall, and offline flows.
 8. Add at least two real phone screenshots. Capture the project slate, guided shot builder, visual preview, on-set mode, and PDF export. Do not use mock UI that differs from the shipped app.
 9. Run a pre-launch report and fix crashes, ANRs, accessibility warnings, and device-compatibility issues.
 10. If this is a Personal developer account created after 13 November 2023, run a closed test with at least 12 continuously opted-in testers for 14 days before applying for production access.
@@ -51,7 +49,6 @@ Last reviewed: 18 July 2026
 - Re-run analyzer and tests.
 - Build a signed AAB: `flutter build appbundle --release`.
 - Inspect the bundle in Play Console and run the pre-launch report.
-- Re-test billing if Play Billing or entitlement code changed.
 - Review Data safety and privacy copy whenever dependencies or network behavior change.
 
 ## Current-policy references
@@ -61,5 +58,4 @@ Last reviewed: 18 July 2026
 - Upload and Play App Signing: https://developer.android.com/studio/publish/upload-bundle
 - Store listing fields: https://support.google.com/googleplay/android-developer/answer/9859152
 - Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
-- One-time products: https://support.google.com/googleplay/android-developer/answer/16430488
 

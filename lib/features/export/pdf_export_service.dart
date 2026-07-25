@@ -20,7 +20,7 @@ class PdfExportService {
   final MediaService mediaService;
 
   Future<PdfExportResult> build(Project project, PdfLayout layout,
-      {required bool includeCompleted, required bool isPro}) async {
+      {required bool includeCompleted}) async {
     final document = pw.Document(
       title: '${project.title} Shot List',
       author: 'ShotKit',
@@ -29,7 +29,7 @@ class PdfExportService {
     var pageCount = 0;
     if (layout == PdfLayout.detailed) {
       if (project.scenes.isEmpty) {
-        document.addPage(_emptyPage(project, isPro));
+        document.addPage(_emptyPage(project));
         pageCount = 1;
       } else {
         for (var sceneIndex = 0;
@@ -47,7 +47,7 @@ class PdfExportService {
               pageFormat: PdfPageFormat.a4,
               margin: const pw.EdgeInsets.all(32),
               header: (_) => _sceneHeader(project, scene, sceneIndex),
-              footer: (_) => _footer(isPro),
+              footer: (_) => _footer(),
               build: (_) => rows.isEmpty ? [_emptyScene()] : rows,
             ),
           );
@@ -60,7 +60,7 @@ class PdfExportService {
           pageFormat: PdfPageFormat.a4.landscape,
           margin: const pw.EdgeInsets.all(26),
           header: (_) => _projectHeader(project),
-          footer: (_) => _footer(isPro),
+          footer: (_) => _footer(),
           build: (_) => _compact(project, includeCompleted),
         ),
       );
@@ -81,7 +81,7 @@ class PdfExportService {
         filename: '${_safeName(project.title)}_shot-list.pdf',
       );
 
-  pw.Page _emptyPage(Project project, bool isPro) => pw.Page(
+  pw.Page _emptyPage(Project project) => pw.Page(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (_) => pw.Column(
@@ -92,7 +92,7 @@ class PdfExportService {
               pw.Text('No scenes have been added yet.',
                   style: const pw.TextStyle(color: PdfColors.grey700)),
               pw.Spacer(),
-              _footer(isPro),
+              _footer(),
             ]),
       );
 
@@ -238,9 +238,9 @@ class PdfExportService {
       padding: const pw.EdgeInsets.only(top: 24),
       child: pw.Text('No shots on this scene.',
           style: const pw.TextStyle(color: PdfColors.grey700)));
-  pw.Widget _footer(bool isPro) => pw.Align(
+  pw.Widget _footer() => pw.Align(
       alignment: pw.Alignment.centerRight,
-      child: pw.Text(isPro ? 'ShotKit' : 'Made with ShotKit',
+      child: pw.Text('ShotKit',
           style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)));
   int _estimateDetailedPages(int shots) =>
       shots == 0 ? 1 : ((shots + 6) / 7).ceil();

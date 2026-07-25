@@ -18,7 +18,7 @@ void main() {
 
   test('exports an empty project as a verified non-blank PDF', () async {
     final result = await service.build(_project([]), PdfLayout.detailed,
-        includeCompleted: true, isPro: false);
+        includeCompleted: true);
     expect(result.bytes.length, greaterThan(1024));
     expect(result.pageCount, 1);
   });
@@ -40,7 +40,7 @@ void main() {
               imagePath: 'media/missing.jpg'),
         ]);
     final result = await service.build(_project([scene]), PdfLayout.detailed,
-        includeCompleted: true, isPro: true);
+        includeCompleted: true);
     expect(result.bytes.length, greaterThan(1024));
     expect(result.pageCount, greaterThan(0));
   });
@@ -63,7 +63,7 @@ void main() {
         timeOfDay: TimeOfDayTag.indoor,
         shots: shots);
     final result = await service.build(_project([scene]), PdfLayout.compact,
-        includeCompleted: true, isPro: true);
+        includeCompleted: true);
     expect(result.bytes.length, greaterThan(1024));
     expect(result.pageCount, greaterThan(1));
   });

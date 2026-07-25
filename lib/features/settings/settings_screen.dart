@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/shotkit_widgets.dart';
-import '../../core/widgets/pro_upsell.dart';
 import '../../data/shotkit_store.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -54,65 +53,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: ShotKitColors.tape.withValues(alpha: .09),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: ShotKitColors.tape.withValues(alpha: .35),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: ShotKitColors.tape,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: const Icon(
-                          Icons.all_inclusive_rounded,
-                          color: ShotKitColors.tapeInk,
-                        ),
-                      ),
-                      const SizedBox(width: 13),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'SHOTKIT PRO',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              widget.store.isPro
-                                  ? 'Unlocked on this device.'
-                                  : 'One unlock. No subscription.',
-                              style: const TextStyle(
-                                color: ShotKitColors.dim,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      OutlinedButton(
-                        onPressed: widget.store.isPro
-                            ? null
-                            : () => showProUpsell(context, widget.store),
-                        child: Text(widget.store.isPro ? 'PRO' : 'UNLOCK'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
                 const SectionLabel('On-set behaviour'),
                 _SettingSwitch(
                   icon: Icons.light_mode_outlined,
@@ -138,7 +78,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                const SectionLabel('Storage & purchases'),
+                const SectionLabel('Storage'),
                 _SettingsTile(
                   icon: Icons.folder_outlined,
                   title: 'Local media',
@@ -154,19 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: 'Archived projects',
                   subtitle: '${widget.store.archivedProjects.length} archived',
                   onTap: _showArchived,
-                ),
-                const SizedBox(height: 10),
-                _SettingsTile(
-                  icon: Icons.restore_rounded,
-                  title: 'Restore purchase',
-                  subtitle: 'Use your Google Play account',
-                  onTap: () async {
-                    await widget.store.entitlement.restore();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Checking Google Play purchases…')));
-                    }
-                  },
                 ),
                 const SizedBox(height: 24),
                 const Center(
