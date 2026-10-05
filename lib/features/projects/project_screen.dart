@@ -105,28 +105,23 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: _openOnSet,
-                          icon: const Icon(
-                            Icons.radio_button_checked_rounded,
-                            size: 20,
-                          ),
-                          label: const Text('Start on-set'),
-                        ),
+                  child: ActionPair(
+                    primary: FilledButton.icon(
+                      onPressed: _openOnSet,
+                      icon: const Icon(
+                        Icons.radio_button_checked_rounded,
+                        size: 20,
                       ),
-                      const SizedBox(width: 10),
-                      OutlinedButton.icon(
-                        onPressed: _openExport,
-                        icon: const Icon(
-                          Icons.picture_as_pdf_outlined,
-                          size: 18,
-                        ),
-                        label: const Text('PDF'),
+                      label: const Text('Start on-set'),
+                    ),
+                    secondary: OutlinedButton.icon(
+                      onPressed: _openExport,
+                      icon: const Icon(
+                        Icons.picture_as_pdf_outlined,
+                        size: 18,
                       ),
-                    ],
+                      label: const Text('PDF'),
+                    ),
                   ),
                 ),
                 Padding(
@@ -319,7 +314,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
             Navigator.pop(context);
           }
 
-          return Padding(
+          return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               20,
               12,

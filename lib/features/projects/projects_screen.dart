@@ -81,7 +81,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     ),
                     const SizedBox(height: 22),
                   ],
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 12,
+                    runSpacing: 10,
                     children: [
                       Text(
                         'Projects',
@@ -90,7 +94,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                             .titleMedium
                             ?.copyWith(fontSize: 19),
                       ),
-                      const Spacer(),
                       if (archived.isNotEmpty || _showArchived)
                         SegmentedPill(
                           labels: [
@@ -317,7 +320,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             if (context.mounted) Navigator.pop(context, project);
           }
 
-          return Padding(
+          return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               20,
               12,
@@ -412,12 +415,18 @@ class _HomeHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'SHOTKIT',
-                  style: ShotKitText.display(size: 31).copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: .4,
-                    height: 1,
+                // The wordmark never breaks mid-word; it shrinks instead.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'SHOTKIT',
+                    maxLines: 1,
+                    style: ShotKitText.display(size: 31).copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: .4,
+                      height: 1,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -495,11 +504,14 @@ class _NextUpCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            project.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: ShotKitText.headline(size: 27),
+          MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.5,
+            child: Text(
+              project.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: ShotKitText.headline(size: 27),
+            ),
           ),
           const SizedBox(height: 14),
           Row(
@@ -530,9 +542,11 @@ class _NextUpCard extends StatelessWidget {
                   label: 'Shots done',
                 ),
               ),
+              const SizedBox(width: 10),
               Expanded(
                 child: StatValue(value: '$mustLeft', label: 'Must left'),
               ),
+              const SizedBox(width: 10),
               Expanded(
                 child: StatValue(
                   value: '${project.scenes.length}',
@@ -544,19 +558,14 @@ class _NextUpCard extends StatelessWidget {
           const SizedBox(height: 14),
           SceneProgressBar(scenes: project.scenes),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onSet,
-                  icon:
-                      const Icon(Icons.radio_button_checked_rounded, size: 20),
-                  label: const Text('Start on-set'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              OutlinedButton(onPressed: onOpen, child: const Text('Open')),
-            ],
+          ActionPair(
+            primary: FilledButton.icon(
+              onPressed: onSet,
+              icon: const Icon(Icons.radio_button_checked_rounded, size: 20),
+              label: const Text('Start on-set'),
+            ),
+            secondary:
+                OutlinedButton(onPressed: onOpen, child: const Text('Open')),
           ),
         ],
       ),

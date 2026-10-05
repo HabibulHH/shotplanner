@@ -152,7 +152,12 @@ class TitleBlock extends StatelessWidget {
             ),
             const SizedBox(height: 6),
           ],
-          Text(title.toUpperCase(), style: ShotKitText.display()),
+          // Big titles grow less than body text, like Android's own
+          // nonlinear font scaling, so single words don't break mid-word.
+          MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.3,
+            child: Text(title.toUpperCase(), style: ShotKitText.display()),
+          ),
           if (meta != null) ...[
             const SizedBox(height: 8),
             meta!,
@@ -268,13 +273,25 @@ class StatValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.5,
+      child: _value(),
+    );
+  }
+
+  Widget _value() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          value,
-          maxLines: 1,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        // Numbers shrink rather than clip ("0/25" must never read "0/2").
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
         ),
         const SizedBox(height: 3),
         Text(
@@ -282,6 +299,37 @@ class StatValue extends StatelessWidget {
           style: ShotKitText.mono(size: 10, spacing: 1),
         ),
       ],
+    );
+  }
+}
+
+/// A main action with a smaller one beside it. With very large text the two
+/// stack full-width so neither label breaks mid-word.
+class ActionPair extends StatelessWidget {
+  const ActionPair({
+    super.key,
+    required this.primary,
+    required this.secondary,
+    this.secondaryFirst = false,
+  });
+
+  final Widget primary;
+  final Widget secondary;
+  final bool secondaryFirst;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.textScalerOf(context).scale(10) >= 15) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [primary, const SizedBox(height: 10), secondary],
+      );
+    }
+    final main = Expanded(child: primary);
+    return Row(
+      children: secondaryFirst
+          ? [secondary, const SizedBox(width: 10), main]
+          : [main, const SizedBox(width: 10), secondary],
     );
   }
 }
@@ -571,6 +619,14 @@ class SegmentedPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Shrinks to fit narrow screens at very large font sizes.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: _pill(),
+    );
+  }
+
+  Widget _pill() {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
@@ -776,40 +832,44 @@ class ShotKitNavBar extends StatelessWidget {
         color: ShotKitColors.nav,
         border: Border(top: BorderSide(color: ShotKitColors.line)),
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: _NavItem(
-                  label: 'Projects',
-                  icon: Icons.video_library_outlined,
-                  selected: active == NavTab.projects,
-                  onTap: onProjects,
+      // Tab labels stop growing at 130% so they stay inside the tabs.
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _NavItem(
+                    label: 'Projects',
+                    icon: Icons.video_library_outlined,
+                    selected: active == NavTab.projects,
+                    onTap: onProjects,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _NavItem(
-                  label: 'On set',
-                  icon: Icons.radio_button_unchecked_rounded,
-                  live: true,
-                  selected: active == NavTab.onSet,
-                  onTap: onOnSet,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _NavItem(
+                    label: 'On set',
+                    icon: Icons.radio_button_unchecked_rounded,
+                    live: true,
+                    selected: active == NavTab.onSet,
+                    onTap: onOnSet,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _NavItem(
-                  label: 'Kit',
-                  icon: Icons.tune_rounded,
-                  selected: active == NavTab.kit,
-                  onTap: onKit,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _NavItem(
+                    label: 'Kit',
+                    icon: Icons.tune_rounded,
+                    selected: active == NavTab.kit,
+                    onTap: onKit,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

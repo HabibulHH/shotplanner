@@ -210,32 +210,33 @@ class _OnSetScreenState extends State<OnSetScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 7, 16, 0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        spacing: 12,
+                        runSpacing: 2,
+                        children: [
+                          Text(
                             '${done.length} / ${scene.shots.length} CAPTURED',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             style: ShotKitText.mono(
                               size: 10.5,
                               color: p.dim,
                               spacing: .6,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          mustLeft == 0
-                              ? 'ALL MUST-HAVES IN'
-                              : '$mustLeft MUST-HAVE${mustLeft == 1 ? '' : 'S'} LEFT',
-                          style: ShotKitText.mono(
-                            size: 10.5,
-                            color: mustLeft == 0 ? p.success : p.dim,
-                            spacing: .6,
+                          Text(
+                            mustLeft == 0
+                                ? 'ALL MUST-HAVES IN'
+                                : '$mustLeft MUST-HAVE${mustLeft == 1 ? '' : 'S'} LEFT',
+                            style: ShotKitText.mono(
+                              size: 10.5,
+                              color: mustLeft == 0 ? p.success : p.dim,
+                              spacing: .6,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
@@ -258,64 +259,59 @@ class _OnSetScreenState extends State<OnSetScreen> {
                             store: widget.store,
                           ),
                           const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: upNext.isEmpty
-                                    ? null
-                                    : () => _skip(current),
-                                icon: const Icon(Icons.skip_next_rounded),
-                                label: const Text('Skip'),
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size(0, 58),
-                                  backgroundColor: p.surface,
-                                  foregroundColor: p.text,
-                                  disabledBackgroundColor: p.surface,
-                                  disabledForegroundColor:
-                                      p.dim.withValues(alpha: .5),
-                                  side: BorderSide(color: p.line),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
+                          ActionPair(
+                            secondaryFirst: true,
+                            primary: FilledButton.icon(
+                              onPressed: () => _done(current),
+                              icon: const Icon(Icons.check_rounded, size: 24),
+                              label: Text(
+                                upNext.isEmpty
+                                    ? 'Done · wrap scene'
+                                    : 'Done · next shot',
+                              ),
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(0, 58),
+                                backgroundColor: p.accent,
+                                foregroundColor: p.onAccent,
+                                textStyle: const TextStyle(
+                                  fontFamily: ShotKitFonts.sans,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: FilledButton.icon(
-                                  onPressed: () => _done(current),
-                                  icon:
-                                      const Icon(Icons.check_rounded, size: 24),
-                                  label: Text(
-                                    upNext.isEmpty
-                                        ? 'Done · wrap scene'
-                                        : 'Done · next shot',
-                                  ),
-                                  style: FilledButton.styleFrom(
-                                    minimumSize: const Size(0, 58),
-                                    backgroundColor: p.accent,
-                                    foregroundColor: p.onAccent,
-                                    textStyle: const TextStyle(
-                                      fontFamily: ShotKitFonts.sans,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
+                            ),
+                            secondary: OutlinedButton.icon(
+                              onPressed:
+                                  upNext.isEmpty ? null : () => _skip(current),
+                              icon: const Icon(Icons.skip_next_rounded),
+                              label: const Text('Skip'),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 58),
+                                backgroundColor: p.surface,
+                                foregroundColor: p.text,
+                                disabledBackgroundColor: p.surface,
+                                disabledForegroundColor:
+                                    p.dim.withValues(alpha: .5),
+                                side: BorderSide(color: p.line),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ],
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            Text(
-                              upNext.isEmpty ? 'NOTHING QUEUED' : 'UP NEXT',
-                              style: ShotKitText.label.copyWith(color: p.dim),
+                            Expanded(
+                              child: Text(
+                                upNext.isEmpty ? 'NOTHING QUEUED' : 'UP NEXT',
+                                style: ShotKitText.label.copyWith(color: p.dim),
+                              ),
                             ),
-                            const Spacer(),
                             if (done.isNotEmpty)
                               TextButton.icon(
                                 onPressed: () =>
@@ -471,9 +467,12 @@ class _NextUpCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  shot.description,
-                  style: ShotKitText.headline(color: p.text),
+                MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.5,
+                  child: Text(
+                    shot.description,
+                    style: ShotKitText.headline(color: p.text),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Wrap(
@@ -733,9 +732,12 @@ class _WrapCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            'All $shotCount shots are in the can.',
-            style: ShotKitText.headline(color: p.text),
+          MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.5,
+            child: Text(
+              'All $shotCount shots are in the can.',
+              style: ShotKitText.headline(color: p.text),
+            ),
           ),
           const SizedBox(height: 18),
           if (next != null)

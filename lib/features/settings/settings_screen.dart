@@ -242,14 +242,19 @@ class _SettingSwitch extends StatelessWidget {
         side: const BorderSide(color: ShotKitColors.line),
       ),
       clipBehavior: Clip.antiAlias,
-      child: SwitchListTile(
-        value: value,
-        onChanged: onChanged,
-        secondary: Icon(icon, color: ShotKitColors.tape),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: ShotKitColors.dim, fontSize: 12.5),
+      child: MediaQuery.withClampedTextScaling(
+        // Option labels grow up to 140% so long words still fit.
+        maxScaleFactor: 1.4,
+        child: SwitchListTile(
+          value: value,
+          onChanged: onChanged,
+          secondary: Icon(icon, color: ShotKitColors.tape),
+          title:
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(
+            subtitle,
+            style: const TextStyle(color: ShotKitColors.dim, fontSize: 12.5),
+          ),
         ),
       ),
     );
@@ -277,17 +282,22 @@ class _SettingsTile extends StatelessWidget {
         side: const BorderSide(color: ShotKitColors.line),
       ),
       clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(icon, color: ShotKitColors.dim),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: ShotKitColors.dim, fontSize: 12.5),
-        ),
-        trailing: const Icon(
-          Icons.chevron_right_rounded,
-          color: ShotKitColors.dim,
+      child: MediaQuery.withClampedTextScaling(
+        // Option labels grow up to 140% so long words still fit.
+        maxScaleFactor: 1.4,
+        child: ListTile(
+          onTap: onTap,
+          leading: Icon(icon, color: ShotKitColors.dim),
+          title:
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(
+            subtitle,
+            style: const TextStyle(color: ShotKitColors.dim, fontSize: 12.5),
+          ),
+          trailing: const Icon(
+            Icons.chevron_right_rounded,
+            color: ShotKitColors.dim,
+          ),
         ),
       ),
     );

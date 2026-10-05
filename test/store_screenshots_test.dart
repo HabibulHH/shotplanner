@@ -10,7 +10,6 @@ import 'dart:ui' as ui;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shotkit/core/theme/app_theme.dart';
@@ -24,6 +23,8 @@ import 'package:shotkit/features/projects/project_screen.dart';
 import 'package:shotkit/features/projects/projects_screen.dart';
 import 'package:shotkit/features/scenes/scene_screen.dart';
 
+import 'support/real_fonts.dart';
+
 final _enabled = Platform.environment['SHOTKIT_SCREENSHOTS'] == '1';
 const _outDir = 'assets/play-store/screenshots';
 const _canvas = Size(1080, 1920);
@@ -33,7 +34,7 @@ final _frameKey = GlobalKey();
 
 void main() {
   setUpAll(() async {
-    if (_enabled) await _loadFonts();
+    if (_enabled) await loadRealFonts();
   });
 
   testWidgets('01 home', (tester) async {
@@ -324,55 +325,4 @@ class _StoreFrame extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<void> _loadFonts() async {
-  const families = {
-    ShotKitFonts.sans: [
-      'Archivo-Regular',
-      'Archivo-Medium',
-      'Archivo-SemiBold',
-      'Archivo-Bold',
-      'Archivo-ExtraBold',
-    ],
-    ShotKitFonts.semiCondensed: ['ArchivoSemiCondensed-ExtraBold'],
-    ShotKitFonts.condensed: [
-      'ArchivoCondensed-ExtraBold',
-      'ArchivoCondensed-Black',
-    ],
-    ShotKitFonts.mono: [
-      'JetBrainsMono-Regular',
-      'JetBrainsMono-Medium',
-      'JetBrainsMono-Bold',
-    ],
-  };
-  for (final MapEntry(key: family, value: files) in families.entries) {
-    final loader = FontLoader(family);
-    for (final file in files) {
-      loader.addFont(_fontBytes('assets/fonts/$file.ttf'));
-    }
-    await loader.load();
-  }
-  await (FontLoader('MaterialIcons')..addFont(_fontBytes(_materialIcons())))
-      .load();
-}
-
-Future<ByteData> _fontBytes(String path) async =>
-    ByteData.sublistView(await File(path).readAsBytes());
-
-/// The Material icon font ships with the Flutter SDK.
-String _materialIcons() {
-  const relative =
-      'bin/cache/artifacts/material_fonts/materialicons-regular.otf';
-  final root = Platform.environment['FLUTTER_ROOT'];
-  if (root != null && File(p.join(root, relative)).existsSync()) {
-    return p.join(root, relative);
-  }
-  var dir = File(Platform.resolvedExecutable).parent;
-  while (dir.parent.path != dir.path) {
-    final candidate = File(p.join(dir.path, relative));
-    if (candidate.existsSync()) return candidate.path;
-    dir = dir.parent;
-  }
-  throw StateError('MaterialIcons font not found; set FLUTTER_ROOT.');
 }

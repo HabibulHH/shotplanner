@@ -125,17 +125,21 @@ class _ExportScreenState extends State<ExportScreen> {
                           side: const BorderSide(color: ShotKitColors.line),
                         ),
                         clipBehavior: Clip.antiAlias,
-                        child: SwitchListTile(
-                          value: includeCompleted,
-                          onChanged: (value) =>
-                              setState(() => includeCompleted = value),
-                          title: const Text(
-                            'Include completion marks',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          subtitle: const Text(
-                            'Useful for crew handoff',
-                            style: TextStyle(color: ShotKitColors.dim),
+                        child: MediaQuery.withClampedTextScaling(
+                          // Option labels grow up to 140% so long words still fit.
+                          maxScaleFactor: 1.4,
+                          child: SwitchListTile(
+                            value: includeCompleted,
+                            onChanged: (value) =>
+                                setState(() => includeCompleted = value),
+                            title: const Text(
+                              'Include completion marks',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            subtitle: const Text(
+                              'Useful for crew handoff',
+                              style: TextStyle(color: ShotKitColors.dim),
+                            ),
                           ),
                         ),
                       ),
@@ -281,74 +285,79 @@ class _LayoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 170),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: selected
-              ? ShotKitColors.tape.withValues(alpha: .08)
-              : ShotKitColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: selected ? ShotKitColors.tape : ShotKitColors.line,
-            width: selected ? 1.5 : 1,
+    return MediaQuery.withClampedTextScaling(
+      // Option labels grow up to 140% so long words still fit.
+      maxScaleFactor: 1.4,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 170),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected
+                ? ShotKitColors.tape.withValues(alpha: .08)
+                : ShotKitColors.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? ShotKitColors.tape : ShotKitColors.line,
+              width: selected ? 1.5 : 1,
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 100,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8E6E0),
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(
-                  detailed ? 4 : 6,
-                  (i) => Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 4),
-                      width: detailed && i.isOdd ? 74 : double.infinity,
-                      decoration: BoxDecoration(
-                        color: i == 0
-                            ? const Color(0xFF272A30)
-                            : const Color(0xFFB8B6B0),
-                        borderRadius: BorderRadius.circular(2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 100,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8E6E0),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(
+                    detailed ? 4 : 6,
+                    (i) => Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        width: detailed && i.isOdd ? 74 : double.infinity,
+                        decoration: BoxDecoration(
+                          color: i == 0
+                              ? const Color(0xFF272A30)
+                              : const Color(0xFFB8B6B0),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ),
-                ),
-                if (selected)
-                  const Icon(
-                    Icons.check_circle,
-                    color: ShotKitColors.tape,
-                    size: 18,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              style: const TextStyle(color: ShotKitColors.dim, fontSize: 11.5),
-            ),
-          ],
+                  if (selected)
+                    const Icon(
+                      Icons.check_circle,
+                      color: ShotKitColors.tape,
+                      size: 18,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style:
+                    const TextStyle(color: ShotKitColors.dim, fontSize: 11.5),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -100,23 +100,25 @@ class _SceneScreenState extends State<SceneScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
+                          // Wraps onto two lines at large font sizes instead
+                          // of squeezing either label.
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.end,
+                            spacing: 12,
+                            runSpacing: 4,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  scene.progress == 1
-                                      ? 'Scene wrapped'
-                                      : '${scene.completed} of ${shots.length} done',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                              Text(
+                                scene.progress == 1
+                                    ? 'Scene wrapped'
+                                    : '${scene.completed} of ${shots.length} done',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(width: 12),
                               Text(
                                 mustLeft == 0
                                     ? 'ALL MUST-HAVES IN'

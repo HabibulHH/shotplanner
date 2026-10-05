@@ -293,307 +293,70 @@ class _ShotEditorState extends State<_ShotEditor> {
 
   Widget _shotSizeStep() {
     final explanation = _shotSizeExplanation(size);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Column(
-            children: [
-              _AnimatedShotSizePreview(value: size),
-              const SizedBox(height: 12),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: Container(
-                  key: ValueKey(size),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                      color: ShotKitColors.surface,
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(color: ShotKitColors.line)),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                            color: ShotKitColors.tape,
-                            borderRadius: BorderRadius.circular(7)),
-                        child: Text(size,
-                            style: const TextStyle(
-                                color: ShotKitColors.tapeInk,
-                                fontFamily: ShotKitFonts.mono,
-                                fontWeight: FontWeight.w800)),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(explanation.$1,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800)),
-                            const SizedBox(height: 3),
-                            Text(explanation.$2,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: ShotKitColors.dim,
-                                    height: 1.35,
-                                    fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 9),
-          child: Row(
-            children: [
-              Expanded(
-                  child: Text('CHOOSE FRAMING',
-                      style: Theme.of(context).textTheme.labelSmall)),
-              const Icon(Icons.swipe_vertical_rounded,
-                  color: ShotKitColors.dim, size: 17),
-              const SizedBox(width: 5),
-              const Text('SCROLL OPTIONS',
-                  style: TextStyle(
-                      color: ShotKitColors.dim,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: .7)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1.08),
-            itemCount: ShotOptions.sizes.length,
-            itemBuilder: (context, index) {
-              final value = ShotOptions.sizes[index];
-              return _VisualOption(
-                  label: value,
-                  selected: value == size,
-                  cue: _ShotSizeCue(value),
-                  onTap: () => setState(() => size = value));
-            },
-          ),
-        ),
-      ],
+    return _PickerStep(
+      preview: _AnimatedShotSizePreview(value: size),
+      explanation: _ExplanationCard(
+        key: ValueKey(size),
+        code: size,
+        title: explanation.$1,
+        body: explanation.$2,
+      ),
+      label: 'CHOOSE FRAMING',
+      itemCount: ShotOptions.sizes.length,
+      itemBuilder: (context, index) {
+        final value = ShotOptions.sizes[index];
+        return _VisualOption(
+            label: value,
+            selected: value == size,
+            cue: _ShotSizeCue(value),
+            onTap: () => setState(() => size = value));
+      },
     );
   }
 
   Widget _angleStep() {
     final explanation = _angleExplanation(angle);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Column(
-            children: [
-              _AnimatedAnglePreview(value: angle),
-              const SizedBox(height: 12),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: Container(
-                  key: ValueKey(angle),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                      color: ShotKitColors.surface,
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(color: ShotKitColors.line)),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                            color: ShotKitColors.tape,
-                            borderRadius: BorderRadius.circular(7)),
-                        child: Text(angle,
-                            style: const TextStyle(
-                                color: ShotKitColors.tapeInk,
-                                fontFamily: ShotKitFonts.mono,
-                                fontWeight: FontWeight.w800)),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(explanation.$1,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800)),
-                            const SizedBox(height: 3),
-                            Text(explanation.$2,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: ShotKitColors.dim,
-                                    height: 1.35,
-                                    fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 9),
-          child: Row(
-            children: [
-              Expanded(
-                  child: Text('CHOOSE CAMERA ANGLE',
-                      style: Theme.of(context).textTheme.labelSmall)),
-              const Icon(Icons.swipe_vertical_rounded,
-                  color: ShotKitColors.dim, size: 17),
-              const SizedBox(width: 5),
-              const Text('SCROLL OPTIONS',
-                  style: TextStyle(
-                      color: ShotKitColors.dim,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: .7)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1.08),
-            itemCount: ShotOptions.angles.length,
-            itemBuilder: (context, index) {
-              final value = ShotOptions.angles[index];
-              return _VisualOption(
-                  label: value,
-                  selected: value == angle,
-                  cue: _AngleCue(value),
-                  onTap: () => setState(() => angle = value));
-            },
-          ),
-        ),
-      ],
+    return _PickerStep(
+      preview: _AnimatedAnglePreview(value: angle),
+      explanation: _ExplanationCard(
+        key: ValueKey(angle),
+        code: angle,
+        title: explanation.$1,
+        body: explanation.$2,
+      ),
+      label: 'CHOOSE CAMERA ANGLE',
+      itemCount: ShotOptions.angles.length,
+      itemBuilder: (context, index) {
+        final value = ShotOptions.angles[index];
+        return _VisualOption(
+            label: value,
+            selected: value == angle,
+            cue: _AngleCue(value),
+            onTap: () => setState(() => angle = value));
+      },
     );
   }
 
   Widget _movementStep() {
     final explanation = _movementExplanation(movement);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: Column(
-            children: [
-              _AnimatedMovementPreview(value: movement),
-              const SizedBox(height: 12),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: Container(
-                  key: ValueKey(movement),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                      color: ShotKitColors.surface,
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(color: ShotKitColors.line)),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                            color: ShotKitColors.tape,
-                            borderRadius: BorderRadius.circular(7)),
-                        child: Text(movement,
-                            style: const TextStyle(
-                                color: ShotKitColors.tapeInk,
-                                fontFamily: ShotKitFonts.mono,
-                                fontWeight: FontWeight.w800)),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(explanation.$1,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800)),
-                            const SizedBox(height: 3),
-                            Text(explanation.$2,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: ShotKitColors.dim,
-                                    height: 1.35,
-                                    fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 9),
-          child: Row(
-            children: [
-              Expanded(
-                  child: Text('CHOOSE CAMERA MOVEMENT',
-                      style: Theme.of(context).textTheme.labelSmall)),
-              const Icon(Icons.swipe_vertical_rounded,
-                  color: ShotKitColors.dim, size: 17),
-              const SizedBox(width: 5),
-              const Text('SCROLL OPTIONS',
-                  style: TextStyle(
-                      color: ShotKitColors.dim,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: .7)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1.08),
-            itemCount: ShotOptions.movements.length,
-            itemBuilder: (context, index) {
-              final value = ShotOptions.movements[index];
-              return _VisualOption(
-                  label: value,
-                  selected: value == movement,
-                  cue: Icon(_movementIcon(value), size: 27),
-                  onTap: () => setState(() => movement = value));
-            },
-          ),
-        ),
-      ],
+    return _PickerStep(
+      preview: _AnimatedMovementPreview(value: movement),
+      explanation: _ExplanationCard(
+        key: ValueKey(movement),
+        code: movement,
+        title: explanation.$1,
+        body: explanation.$2,
+      ),
+      label: 'CHOOSE CAMERA MOVEMENT',
+      itemCount: ShotOptions.movements.length,
+      itemBuilder: (context, index) {
+        final value = ShotOptions.movements[index];
+        return _VisualOption(
+            label: value,
+            selected: value == movement,
+            cue: Icon(_movementIcon(value), size: 27),
+            onTap: () => setState(() => movement = value));
+      },
     );
   }
 
@@ -835,6 +598,212 @@ class _ShotEditorState extends State<_ShotEditor> {
   }
 }
 
+/// Preview and explanation above a grid of options. The header stays pinned
+/// while the grid scrolls; on short screens or with large text it takes at
+/// most 55% of the height and scrolls on its own, so the grid stays usable.
+class _PickerStep extends StatelessWidget {
+  const _PickerStep({
+    required this.preview,
+    required this.explanation,
+    required this.label,
+    required this.itemCount,
+    required this.itemBuilder,
+  });
+
+  final Widget preview;
+  final Widget explanation;
+  final String label;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    return LayoutBuilder(builder: (context, constraints) {
+      final tileWidth = (constraints.maxWidth - 32 - 16) / 3;
+      // Tiles grow with the font size so the cue and a two-line label fit.
+      final tileHeight =
+          math.max(tileWidth / 1.08, 66 + scaler.scale(12) * 2.6);
+      return Column(
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: constraints.maxHeight * .55),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Column(
+                      children: [
+                        preview,
+                        const SizedBox(height: 12),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: explanation,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 9),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: Text(label,
+                                style: Theme.of(context).textTheme.labelSmall)),
+                        const Icon(Icons.swipe_vertical_rounded,
+                            color: ShotKitColors.dim, size: 17),
+                        const SizedBox(width: 5),
+                        const Text('SCROLL OPTIONS',
+                            style: TextStyle(
+                                color: ShotKitColors.dim,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: .7)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  mainAxisExtent: tileHeight),
+              itemCount: itemCount,
+              itemBuilder: itemBuilder,
+            ),
+          ),
+        ],
+      );
+    });
+  }
+}
+
+/// Selected value on the left, preview caption on the right. Both truncate
+/// rather than overlap when names are long or the font is large.
+class _PreviewLabels extends StatelessWidget {
+  const _PreviewLabels({required this.label, required this.caption});
+  final String label;
+  final String caption;
+
+  @override
+  Widget build(BuildContext context) {
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            flex: 3,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.centerLeft,
+                children: [...previous, if (current != null) current],
+              ),
+              child: Text(label,
+                  key: ValueKey(label),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: ShotKitColors.tape,
+                      fontFamily: ShotKitFonts.mono,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: .8)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            flex: 2,
+            child: Text(caption,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                    color: ShotKitColors.dim,
+                    fontFamily: ShotKitFonts.mono,
+                    fontSize: 9.5,
+                    letterSpacing: .7)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The selected option's code chip next to its title and explanation.
+class _ExplanationCard extends StatelessWidget {
+  const _ExplanationCard({
+    super.key,
+    required this.code,
+    required this.title,
+    required this.body,
+  });
+
+  final String code;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: ShotKitColors.surface,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: ShotKitColors.line)),
+      child: LayoutBuilder(
+        builder: (context, box) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Long names ("Three-quarter rear") wrap instead of pushing the
+            // explanation off screen.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: box.maxWidth * .45),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                    color: ShotKitColors.tape,
+                    borderRadius: BorderRadius.circular(7)),
+                child: Text(code,
+                    style: const TextStyle(
+                        color: ShotKitColors.tapeInk,
+                        fontFamily: ShotKitFonts.mono,
+                        fontWeight: FontWeight.w800)),
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 3),
+                  Text(body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: ShotKitColors.dim,
+                          height: 1.35,
+                          fontSize: 12)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _VisualOption extends StatelessWidget {
   const _VisualOption(
       {required this.label,
@@ -867,22 +836,29 @@ class _VisualOption extends StatelessWidget {
             children: [
               Expanded(
                   child: Center(
-                      child: IconTheme(
-                          data: IconThemeData(
-                              color: selected
-                                  ? ShotKitColors.tape
-                                  : ShotKitColors.dim),
-                          child: cue))),
+                      child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: IconTheme(
+                              data: IconThemeData(
+                                  color: selected
+                                      ? ShotKitColors.tape
+                                      : ShotKitColors.dim),
+                              child: cue)))),
               const SizedBox(height: 6),
-              Text(label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color:
-                          selected ? ShotKitColors.tape : ShotKitColors.paper,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700)),
+              // Option names stay readable in the fixed grid; they grow up
+              // to 130% with the system font size.
+              MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.3,
+                child: Text(label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color:
+                            selected ? ShotKitColors.tape : ShotKitColors.paper,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
         ),
@@ -1071,27 +1047,11 @@ class _AnimatedShotSizePreviewState extends State<_AnimatedShotSizePreview>
             ),
             Positioned(
               left: 12,
+              right: 12,
               top: 11,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: Text(widget.value,
-                    key: ValueKey(widget.value),
-                    style: const TextStyle(
-                        color: ShotKitColors.tape,
-                        fontFamily: ShotKitFonts.mono,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: .8)),
-              ),
+              child: _PreviewLabels(
+                  label: widget.value, caption: '16:9 · LIVE FRAME'),
             ),
-            const Positioned(
-                right: 12,
-                top: 11,
-                child: Text('16:9 · LIVE FRAME',
-                    style: TextStyle(
-                        color: ShotKitColors.dim,
-                        fontFamily: ShotKitFonts.mono,
-                        fontSize: 9.5,
-                        letterSpacing: .7))),
           ],
         ),
       ),
@@ -1470,27 +1430,12 @@ class _AnimatedAnglePreviewState extends State<_AnimatedAnglePreview>
             ),
             Positioned(
               left: 12,
+              right: 12,
               top: 11,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: Text(widget.value.toUpperCase(),
-                    key: ValueKey(widget.value),
-                    style: const TextStyle(
-                        color: ShotKitColors.tape,
-                        fontFamily: ShotKitFonts.mono,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: .8)),
-              ),
+              child: _PreviewLabels(
+                  label: widget.value.toUpperCase(),
+                  caption: 'ANGLE · LIVE VIEW'),
             ),
-            const Positioned(
-                right: 12,
-                top: 11,
-                child: Text('ANGLE · LIVE VIEW',
-                    style: TextStyle(
-                        color: ShotKitColors.dim,
-                        fontFamily: ShotKitFonts.mono,
-                        fontSize: 9.5,
-                        letterSpacing: .7))),
           ],
         ),
       ),
@@ -1863,27 +1808,12 @@ class _AnimatedMovementPreviewState extends State<_AnimatedMovementPreview>
             ),
             Positioned(
               left: 12,
+              right: 12,
               top: 11,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: Text(widget.value.toUpperCase(),
-                    key: ValueKey(widget.value),
-                    style: const TextStyle(
-                        color: ShotKitColors.tape,
-                        fontFamily: ShotKitFonts.mono,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: .8)),
-              ),
+              child: _PreviewLabels(
+                  label: widget.value.toUpperCase(),
+                  caption: 'MOTION · LIVE LOOP'),
             ),
-            const Positioned(
-                right: 12,
-                top: 11,
-                child: Text('MOTION · LIVE LOOP',
-                    style: TextStyle(
-                        color: ShotKitColors.dim,
-                        fontFamily: ShotKitFonts.mono,
-                        fontSize: 9.5,
-                        letterSpacing: .7))),
           ],
         ),
       ),
