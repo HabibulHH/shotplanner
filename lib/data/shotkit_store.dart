@@ -6,16 +6,19 @@ import 'package:flutter/foundation.dart';
 import 'app_database.dart';
 import 'media_service.dart';
 import 'models.dart';
+import 'review_prompter.dart';
 import 'templates.dart';
 
 class ShotKitStore extends ChangeNotifier {
   ShotKitStore({AppDatabase? database}) : database = database ?? AppDatabase() {
     media = MediaService();
+    reviews = ReviewPrompter(this.database);
     ready = _load();
   }
 
   final AppDatabase database;
   late final MediaService media;
+  late final ReviewPrompter reviews;
   final List<Project> projects = [];
   late final Future<void> ready;
   int _nextId = 1000;
@@ -91,6 +94,7 @@ class ShotKitStore extends ChangeNotifier {
           .map((shot) => shot.id),
     ];
     if (ids.isNotEmpty) _nextId = ids.reduce((a, b) => a > b ? a : b) + 1;
+    await reviews.recordOpen();
     notifyListeners();
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/shotkit_widgets.dart';
@@ -124,11 +125,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '${widget.store.archivedProjects.length} archived',
                         onTap: _showArchived,
                       ),
+                      const SizedBox(height: 14),
+                      const SectionLabel('Help'),
+                      _SettingsTile(
+                        icon: Icons.mail_outline_rounded,
+                        title: 'Send feedback',
+                        subtitle: _feedbackEmail,
+                        onTap: _copyFeedbackEmail,
+                      ),
                       const SizedBox(height: 32),
                       const HazardStripe(),
                       const SizedBox(height: 14),
                       Text(
-                        'SHOTKIT · BUILD 1.0.0\nMade for the set, not the cloud.',
+                        'SHOTKIT · BUILD 1.1.0\nMade for the set, not the cloud.',
                         textAlign: TextAlign.center,
                         style: ShotKitText.mono(size: 10.5, height: 1.7),
                       ),
@@ -139,6 +148,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  static const _feedbackEmail = 'thehirahasan@gmail.com';
+
+  Future<void> _copyFeedbackEmail() async {
+    await Clipboard.setData(const ClipboardData(text: _feedbackEmail));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Email copied. Ideas and bug reports are welcome.'),
       ),
     );
   }

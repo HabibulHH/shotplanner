@@ -1,7 +1,7 @@
 name: shotkit
 description: An offline-first shot list and on-set companion for filmmakers.
 publish_to: "none"
-version: 1.0.0+2
+version: 1.1.0+3
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   flutter_image_compress: ^2.5.0
   image_picker: ^1.2.3
+  in_app_review: ^2.0.12
   path: ^1.9.1
   path_provider: ^2.1.6
   pdf: ^3.12.0

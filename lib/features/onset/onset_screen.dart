@@ -83,10 +83,11 @@ class _OnSetScreenState extends State<OnSetScreen> {
     return [...fresh, ...skipped];
   }
 
-  void _done(Shot shot) {
+  Future<void> _done(Shot shot) async {
     HapticFeedback.mediumImpact();
     _skipped.remove(shot.id);
-    widget.store.toggleShot(widget.project, widget.scene, shot);
+    await widget.store.toggleShot(widget.project, widget.scene, shot);
+    if (_pending.isEmpty) await widget.store.reviews.maybeAsk();
   }
 
   void _skip(Shot shot) {

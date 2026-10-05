@@ -212,7 +212,10 @@ class _ExportScreenState extends State<ExportScreen> {
             project: widget.project,
             bytes: result.bytes,
             pageCount: result.pageCount,
-            onShare: () => service.share(widget.project, result),
+            onShare: () async {
+              await service.share(widget.project, result);
+              await widget.store.reviews.maybeAsk();
+            },
           ),
         ),
       );
