@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../core/constants/shot_options.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/widgets/shotkit_widgets.dart';
 import '../../core/utils/shot_code.dart';
+import '../../core/widgets/framing_glyph.dart';
+import '../../core/widgets/shotkit_widgets.dart';
 import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
 import '../onset/onset_screen.dart';
@@ -24,6 +27,10 @@ class SceneScreen extends StatefulWidget {
 }
 
 class _SceneScreenState extends State<SceneScreen> {
+  final _quickAdd = TextEditingController();
+  final _quickAddFocus = FocusNode();
+  bool _reordering = false;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +40,8 @@ class _SceneScreenState extends State<SceneScreen> {
   @override
   void dispose() {
     widget.store.removeListener(_refresh);
+    _quickAdd.dispose();
+    _quickAddFocus.dispose();
     super.dispose();
   }
 
@@ -41,134 +50,242 @@ class _SceneScreenState extends State<SceneScreen> {
   @override
   Widget build(BuildContext context) {
     final scene = widget.scene;
-    final sceneNumber = widget.project.scenes.indexOf(scene) + 1;
+    final sceneIndex = widget.project.scenes.indexOf(scene);
+    final shots = scene.shots;
+    final next = shots.cast<Shot?>().firstWhere(
+          (shot) => !shot!.isDone,
+          orElse: () => null,
+        );
+    final mustLeft =
+        shots.where((shot) => shot.mustHave && !shot.isDone).length;
+
     return Scaffold(
       body: Column(
         children: [
-          SlateHeader(
-            title: scene.title,
-            subtitle:
-                'SC ${sceneNumber.toString().padLeft(2, '0')} · ${scene.location}',
-            showBack: true,
-            trailing: IconButton(
-              onPressed: _openOnSet,
-              tooltip: 'On-set mode',
-              icon: const Icon(
-                Icons.radio_button_checked_rounded,
+          TopBar(
+            actions: [
+              CircleIconButton(
+                icon: Icons.radio_button_checked_rounded,
+                tooltip: 'On-set mode',
                 color: ShotKitColors.record,
+                onPressed: shots.isEmpty ? null : _openOnSet,
               ),
-            ),
+            ],
           ),
           Expanded(
             child: CustomScrollView(
               slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
-                  sliver: SliverToBoxAdapter(
-                    child: _SceneMeter(scene: scene, onSet: _openOnSet),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  sliver: SliverToBoxAdapter(
-                    child: SectionLabel(
-                      'Shooting order',
-                      trailing: Text(
-                        'HOLD & DRAG',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
+                SliverToBoxAdapter(
+                  child: TitleBlock(
+                    eyebrow:
+                        '${sceneCode(sceneIndex)} · ${scene.timeOfDay.label}',
+                    title: scene.title,
+                    meta: MetaRow(
+                      items: [
+                        MetaItem(
+                          icon: Icons.place_outlined,
+                          text: scene.location,
+                        ),
+                        MetaItem(
+                          icon: Icons.view_agenda_outlined,
+                          text:
+                              '${shots.length} ${shots.length == 1 ? 'shot' : 'shots'}',
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                if (scene.shots.isEmpty)
+                if (shots.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                      child: Column(
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  scene.progress == 1
+                                      ? 'Scene wrapped'
+                                      : '${scene.completed} of ${shots.length} done',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                mustLeft == 0
+                                    ? 'ALL MUST-HAVES IN'
+                                    : '$mustLeft MUST-HAVE${mustLeft == 1 ? '' : 'S'} LEFT',
+                                style: ShotKitText.mono(
+                                  weight: FontWeight.w700,
+                                  spacing: .8,
+                                  color: mustLeft == 0
+                                      ? ShotKitColors.success
+                                      : ShotKitColors.tape,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ShotProgressBar(shots: shots, next: next),
+                        ],
+                      ),
+                    ),
+                  ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
+                  sliver: SliverToBoxAdapter(
+                    child: SectionLabel(
+                      'Shot list',
+                      trailing: shots.length > 1
+                          ? TextButton(
+                              onPressed: () =>
+                                  setState(() => _reordering = !_reordering),
+                              child: Text(_reordering ? 'Done' : 'Reorder'),
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                if (shots.isEmpty)
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverToBoxAdapter(
                       child: EmptySlate(
                         title: 'No shots on this slate',
                         body:
-                            'Add the master first, then coverage and inserts.',
+                            'Type a quick description below, or open the shot builder for framing, angle and movement.',
                         action: FilledButton.icon(
-                          onPressed: _addShot,
-                          icon: const Icon(Icons.add),
-                          label: const Text('ADD FIRST SHOT'),
+                          onPressed: () => _addShot(),
+                          icon: const Icon(Icons.tune_rounded),
+                          label: const Text('Open shot builder'),
                         ),
                       ),
                     ),
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     sliver: SliverReorderableList(
-                      itemCount: scene.shots.length,
-                      onReorder: (oldIndex, newIndex) =>
-                          widget.store.reorderShots(scene, oldIndex, newIndex),
-                      itemBuilder: (context, index) => Padding(
-                        key: ValueKey(scene.shots[index].id),
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _ShotRow(
-                          index: index,
-                          sceneIndex: sceneNumber - 1,
-                          shot: scene.shots[index],
-                          store: widget.store,
-                          onToggle: () => widget.store.toggleShot(
-                            widget.project,
-                            scene,
-                            scene.shots[index],
+                      itemCount: shots.length,
+                      onReorderItem: (from, to) =>
+                          widget.store.moveShot(scene, from, to),
+                      itemBuilder: (context, index) {
+                        final shot = shots[index];
+                        return Padding(
+                          key: ValueKey(shot.id),
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _ShotRow(
+                            index: index,
+                            code: shotCode(sceneIndex, index),
+                            shot: shot,
+                            isNext: identical(shot, next),
+                            store: widget.store,
+                            reordering: _reordering,
+                            onToggle: () {
+                              HapticFeedback.selectionClick();
+                              widget.store
+                                  .toggleShot(widget.project, scene, shot);
+                            },
+                            onEdit: () => _editShot(shot),
+                            onDuplicate: () => widget.store
+                                .duplicateShot(widget.project, scene, shot),
+                            onDelete: () => _deleteShot(shot),
                           ),
-                          onEdit: () => _editShot(scene.shots[index]),
-                          onDuplicate: () => widget.store.duplicateShot(
-                              widget.project, scene, scene.shots[index]),
-                          onDelete: () => widget.store.deleteShot(
-                              widget.project, scene, scene.shots[index]),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
               ],
             ),
           ),
+          _QuickAddBar(
+            controller: _quickAdd,
+            focusNode: _quickAddFocus,
+            onAdd: _submitQuickAdd,
+            onOpenBuilder: () => _addShot(initialDescription: _quickAdd.text),
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addShot,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('ADD SHOT'),
       ),
     );
   }
 
-  Future<void> _addShot() async {
+  Future<void> _submitQuickAdd() async {
+    final text = _quickAdd.text.trim();
+    if (text.isEmpty) {
+      await _addShot();
+      return;
+    }
+    final scene = widget.scene;
+    final shot = Shot(
+      id: widget.store.nextId(),
+      description: text,
+      size: ShotOptions.quickSize,
+      angle: ShotOptions.quickAngle,
+      movement: ShotOptions.quickMovement,
+      lens: ShotOptions.quickLens,
+    );
+    _quickAdd.clear();
+    await widget.store.addShot(widget.project, scene, shot);
+    if (!mounted) return;
+    final code = shotCode(
+      widget.project.scenes.indexOf(scene),
+      scene.shots.indexOf(shot),
+    );
+    _snack(
+      'Added $code · ${ShotOptions.quickSize}, ${ShotOptions.quickLens}',
+      action: SnackBarAction(label: 'Edit', onPressed: () => _editShot(shot)),
+    );
+  }
+
+  Future<void> _addShot({String? initialDescription}) async {
+    var description = initialDescription?.trim();
     var addAnother = true;
-    while (addAnother && mounted) {
+    while (addAnother) {
       if (!mounted) return;
-      final draft =
-          await showShotEditor(context, widget.scene, widget.store.media);
+      final draft = await showShotEditor(
+        context,
+        widget.scene,
+        widget.store.media,
+        initialDescription:
+            description == null || description.isEmpty ? null : description,
+      );
       if (draft == null) return;
+      if (description != null) _quickAdd.clear();
+      description = null;
       await widget.store.addShot(
-          widget.project,
-          widget.scene,
-          Shot(
-            id: widget.store.nextId(),
-            description: draft.description,
-            size: draft.size,
-            angle: draft.angle,
-            movement: draft.movement,
-            lens: draft.lens,
-            camera: draft.camera,
-            notes: draft.notes,
-            durationSec: draft.durationSec,
-            imagePath: draft.imagePath,
-            mustHave: draft.mustHave,
-          ));
+        widget.project,
+        widget.scene,
+        Shot(
+          id: widget.store.nextId(),
+          description: draft.description,
+          size: draft.size,
+          angle: draft.angle,
+          movement: draft.movement,
+          lens: draft.lens,
+          camera: draft.camera,
+          notes: draft.notes,
+          durationSec: draft.durationSec,
+          imagePath: draft.imagePath,
+          mustHave: draft.mustHave,
+        ),
+      );
       addAnother = draft.addAnother;
     }
   }
 
   Future<void> _editShot(Shot shot) async {
     final draft = await showShotEditor(
-        context, widget.scene, widget.store.media,
-        existing: shot);
+      context,
+      widget.scene,
+      widget.store.media,
+      existing: shot,
+    );
     if (draft == null) return;
     shot
       ..description = draft.description
@@ -184,6 +301,26 @@ class _SceneScreenState extends State<SceneScreen> {
     await widget.store.updateShot(widget.project, shot);
   }
 
+  Future<void> _deleteShot(Shot shot) async {
+    await widget.store.deleteShot(widget.project, widget.scene, shot);
+    if (!mounted) return;
+    _snack('Deleted “${shot.description}”');
+  }
+
+  void _snack(String message, {SnackBarAction? action}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          action: action,
+          persist: false,
+          // Sit above the quick-add bar instead of covering it.
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 86),
+        ),
+      );
+  }
+
   void _openOnSet() => Navigator.push(
         context,
         MaterialPageRoute(
@@ -196,257 +333,326 @@ class _SceneScreenState extends State<SceneScreen> {
       );
 }
 
-class _SceneMeter extends StatelessWidget {
-  const _SceneMeter({required this.scene, required this.onSet});
-  final Scene scene;
-  final VoidCallback onSet;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: ShotKitColors.raised,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ShotKitColors.line),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${scene.completed} OF ${scene.shots.length} DONE',
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      scene.progress == 1
-                          ? 'Scene wrapped'
-                          : '${(scene.progress * 100).round()}% covered',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ],
-                ),
-              ),
-              FilledButton.tonalIcon(
-                onPressed: onSet,
-                icon: const Icon(Icons.fullscreen_rounded),
-                label: const Text('ON SET'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: ShotKitColors.tape.withValues(alpha: .12),
-                  foregroundColor: ShotKitColors.tape,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          FilmProgress(value: scene.progress, height: 7),
-        ],
-      ),
-    );
-  }
-}
-
-class _ShotRow extends StatelessWidget {
+/// A shot card that slides left to reveal Duplicate and Delete.
+class _ShotRow extends StatefulWidget {
   const _ShotRow({
     required this.index,
-    required this.sceneIndex,
+    required this.code,
     required this.shot,
+    required this.isNext,
     required this.store,
+    required this.reordering,
     required this.onToggle,
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
   });
   final int index;
-  final int sceneIndex;
+  final String code;
   final Shot shot;
+  final bool isNext;
   final ShotKitStore store;
+  final bool reordering;
   final VoidCallback onToggle;
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
 
   @override
+  State<_ShotRow> createState() => _ShotRowState();
+}
+
+class _ShotRowState extends State<_ShotRow>
+    with SingleTickerProviderStateMixin {
+  static const _actionWidth = 72.0;
+  static const _revealWidth = _actionWidth * 2;
+
+  late final AnimationController _reveal = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  );
+
+  @override
+  void didUpdateWidget(covariant _ShotRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reordering && _reveal.value > 0) _reveal.reverse();
+  }
+
+  @override
+  void dispose() {
+    _reveal.dispose();
+    super.dispose();
+  }
+
+  void _dragUpdate(DragUpdateDetails details) {
+    _reveal.value -= (details.primaryDelta ?? 0) / _revealWidth;
+  }
+
+  void _dragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    final open =
+        velocity < -300 || (velocity.abs() <= 300 && _reveal.value > .5);
+    open ? _reveal.forward() : _reveal.reverse();
+  }
+
+  void _run(VoidCallback action) {
+    _reveal.reverse();
+    action();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final code = shotCode(sceneIndex, index);
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 180),
-      opacity: shot.isDone ? .5 : 1,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: ShotKitColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ShotKitColors.line),
+    final shot = widget.shot;
+    final card = _card(context, shot);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _reveal,
+              builder: (context, child) =>
+                  _reveal.value == 0 ? const SizedBox.shrink() : child!,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SwipeAction(
+                      icon: Icons.copy_rounded,
+                      label: 'Duplicate',
+                      background: ShotKitColors.line,
+                      foreground: ShotKitColors.paper,
+                      onTap: () => _run(widget.onDuplicate),
+                    ),
+                    _SwipeAction(
+                      icon: Icons.delete_outline_rounded,
+                      label: 'Delete',
+                      background: ShotKitColors.record,
+                      foreground: ShotKitColors.tapeInk,
+                      onTap: () => _run(widget.onDelete),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AnimatedBuilder(
+            animation: _reveal,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(-_reveal.value * _revealWidth, 0),
+              child: child,
+            ),
+            child: GestureDetector(
+              onHorizontalDragUpdate: widget.reordering ? null : _dragUpdate,
+              onHorizontalDragEnd: widget.reordering ? null : _dragEnd,
+              child: card,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _card(BuildContext context, Shot shot) {
+    final tags = <Widget>[
+      if (widget.isNext) const ShotTag('Next up', tone: TagTone.accent),
+      if (!shot.mustHave) const ShotTag('Optional'),
+      if (shot.camera != 'A-Cam') ShotTag(shot.camera, tone: TagTone.cam),
+    ];
+    return Material(
+      color: ShotKitColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: widget.isNext
+              ? ShotKitColors.tape.withValues(alpha: .55)
+              : ShotKitColors.line,
         ),
-        child: Row(
-          children: [
-            _ShotThumb(shot: shot, store: store),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ShotKitColors.tape,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          code,
-                          style: const TextStyle(
-                            color: ShotKitColors.tapeInk,
-                            fontFamily: 'monospace',
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+      ),
+      child: InkWell(
+        onTap: widget.reordering
+            ? null
+            : () => _reveal.value > 0 ? _reveal.reverse() : widget.onEdit(),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              Opacity(
+                opacity: shot.isDone ? .55 : 1,
+                child: Stack(
+                  children: [
+                    ShotThumb(
+                      shot: shot,
+                      media: widget.store.media,
+                      width: 80,
+                      height: 45,
+                    ),
+                    Positioned(left: 5, top: 5, child: CodeBadge(widget.code)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      shot.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                        color: shot.isDone
+                            ? ShotKitColors.dim
+                            : ShotKitColors.paper,
                       ),
-                      const SizedBox(width: 7),
-                      Expanded(
-                        child: Text(
-                          shot.description,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      if (shot.mustHave)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 5),
-                          child: Text(
-                            'MUST',
-                            style: TextStyle(
-                              color: ShotKitColors.record,
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: .8,
-                            ),
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      shotSpec(shot),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ShotKitText.mono(spacing: .3),
+                    ),
+                    if (tags.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Wrap(spacing: 6, runSpacing: 4, children: tags),
                     ],
-                  ),
-                  const SizedBox(height: 7),
-                  Wrap(
-                    spacing: 5,
-                    runSpacing: 4,
-                    children: [
-                      DataPill(shot.size),
-                      DataPill(shot.movement),
-                      DataPill(shot.lens),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 7),
-            InkWell(
-              onTap: onToggle,
-              borderRadius: BorderRadius.circular(9),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color:
-                      shot.isDone ? ShotKitColors.success : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(
-                    color: shot.isDone
-                        ? ShotKitColors.success
-                        : ShotKitColors.line,
-                    width: 1.5,
-                  ),
-                ),
-                child: Icon(
-                  Icons.check_rounded,
-                  size: 18,
-                  color: shot.isDone
-                      ? const Color(0xFF06220F)
-                      : Colors.transparent,
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 4),
-            PopupMenuButton<String>(
-              padding: EdgeInsets.zero,
-              onSelected: (value) {
-                if (value == 'edit') onEdit();
-                if (value == 'duplicate') onDuplicate();
-                if (value == 'delete') onDelete();
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit shot')),
-                PopupMenuItem(
-                    value: 'duplicate', child: Text('Duplicate shot')),
-                PopupMenuItem(value: 'delete', child: Text('Delete shot')),
-              ],
-            ),
-            ReorderableDragStartListener(
-              index: index,
-              child: const Padding(
-                padding: EdgeInsets.all(3),
-                child: Icon(
-                  Icons.drag_indicator_rounded,
-                  color: ShotKitColors.dim,
-                  size: 20,
-                ),
-              ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              if (widget.reordering)
+                ReorderableDragStartListener(
+                  index: widget.index,
+                  child: const SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(
+                      Icons.drag_indicator_rounded,
+                      color: ShotKitColors.dim,
+                    ),
+                  ),
+                )
+              else
+                CheckButton(done: shot.isDone, onPressed: widget.onToggle),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ShotThumb extends StatelessWidget {
-  const _ShotThumb({required this.shot, required this.store});
-  final Shot shot;
-  final ShotKitStore store;
+class _SwipeAction extends StatelessWidget {
+  const _SwipeAction({
+    required this.icon,
+    required this.label,
+    required this.background,
+    required this.foreground,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final Color background;
+  final Color foreground;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: store.media.resolve(shot.imagePath),
-      builder: (context, snapshot) {
-        final file = snapshot.data;
-        return Container(
-          width: 62,
-          height: 42,
-          alignment: Alignment.center,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: ShotKitColors.raised,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: ShotKitColors.line),
-          ),
-          child: file != null
-              ? Image.file(file, width: 62, height: 42, fit: BoxFit.cover)
-              : Icon(
-                  shot.isDone
-                      ? Icons.check_rounded
-                      : Icons.photo_size_select_large_outlined,
-                  color:
-                      shot.isDone ? ShotKitColors.success : ShotKitColors.dim,
-                  size: 19,
+    return Material(
+      color: background,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: _ShotRowState._actionWidth,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: foreground),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
-        );
-      },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom bar: type a description and add it with sensible defaults, or open
+/// the guided builder for full framing details.
+class _QuickAddBar extends StatelessWidget {
+  const _QuickAddBar({
+    required this.controller,
+    required this.focusNode,
+    required this.onAdd,
+    required this.onOpenBuilder,
+  });
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onAdd;
+  final VoidCallback onOpenBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: ShotKitColors.ink,
+        border: Border(top: BorderSide(color: ShotKitColors.line)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    onAdd();
+                    focusNode.requestFocus();
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Describe the next shot…',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                    prefixIcon: IconButton(
+                      onPressed: onOpenBuilder,
+                      tooltip: 'Open the shot builder',
+                      icon: const Icon(
+                        Icons.tune_rounded,
+                        color: ShotKitColors.tape,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              FilledButton(
+                onPressed: onAdd,
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 50)),
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

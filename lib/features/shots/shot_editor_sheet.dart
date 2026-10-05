@@ -43,22 +43,33 @@ Future<ShotDraft?> showShotEditor(
   Scene scene,
   MediaService media, {
   Shot? existing,
+  String? initialDescription,
 }) {
   return Navigator.of(context).push<ShotDraft>(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) =>
-          _ShotEditor(scene: scene, media: media, existing: existing),
+      builder: (_) => _ShotEditor(
+        scene: scene,
+        media: media,
+        existing: existing,
+        initialDescription: initialDescription,
+      ),
     ),
   );
 }
 
 class _ShotEditor extends StatefulWidget {
-  const _ShotEditor({required this.scene, required this.media, this.existing});
+  const _ShotEditor({
+    required this.scene,
+    required this.media,
+    this.existing,
+    this.initialDescription,
+  });
 
   final Scene scene;
   final MediaService media;
   final Shot? existing;
+  final String? initialDescription;
 
   @override
   State<_ShotEditor> createState() => _ShotEditorState();
@@ -96,7 +107,8 @@ class _ShotEditorState extends State<_ShotEditor> {
   void initState() {
     super.initState();
     final shot = widget.existing;
-    description = TextEditingController(text: shot?.description);
+    description = TextEditingController(
+        text: shot?.description ?? widget.initialDescription);
     notes = TextEditingController(text: shot?.notes);
     duration = TextEditingController(text: shot?.durationSec?.toString());
     final savedLens = shot?.lens ?? '50mm';
@@ -159,7 +171,7 @@ class _ShotEditorState extends State<_ShotEditor> {
                   child: Text('${step + 1} / ${_steps.length}',
                       style: const TextStyle(
                           color: ShotKitColors.dim,
-                          fontFamily: 'monospace',
+                          fontFamily: ShotKitFonts.mono,
                           fontSize: 11.5))),
             ),
           ],
@@ -310,7 +322,7 @@ class _ShotEditorState extends State<_ShotEditor> {
                         child: Text(size,
                             style: const TextStyle(
                                 color: ShotKitColors.tapeInk,
-                                fontFamily: 'monospace',
+                                fontFamily: ShotKitFonts.mono,
                                 fontWeight: FontWeight.w800)),
                       ),
                       const SizedBox(width: 11),
@@ -412,7 +424,7 @@ class _ShotEditorState extends State<_ShotEditor> {
                         child: Text(angle,
                             style: const TextStyle(
                                 color: ShotKitColors.tapeInk,
-                                fontFamily: 'monospace',
+                                fontFamily: ShotKitFonts.mono,
                                 fontWeight: FontWeight.w800)),
                       ),
                       const SizedBox(width: 11),
@@ -514,7 +526,7 @@ class _ShotEditorState extends State<_ShotEditor> {
                         child: Text(movement,
                             style: const TextStyle(
                                 color: ShotKitColors.tapeInk,
-                                fontFamily: 'monospace',
+                                fontFamily: ShotKitFonts.mono,
                                 fontWeight: FontWeight.w800)),
                       ),
                       const SizedBox(width: 11),
@@ -690,7 +702,7 @@ class _ShotEditorState extends State<_ShotEditor> {
                   '$size · $angle · $movement · ${_resolvedLens()} · ${_resolvedCamera()}',
                   style: const TextStyle(
                       color: ShotKitColors.dim,
-                      fontFamily: 'monospace',
+                      fontFamily: ShotKitFonts.mono,
                       fontSize: 11.5)),
             ],
           ),
@@ -1066,7 +1078,7 @@ class _AnimatedShotSizePreviewState extends State<_AnimatedShotSizePreview>
                     key: ValueKey(widget.value),
                     style: const TextStyle(
                         color: ShotKitColors.tape,
-                        fontFamily: 'monospace',
+                        fontFamily: ShotKitFonts.mono,
                         fontWeight: FontWeight.w800,
                         letterSpacing: .8)),
               ),
@@ -1077,7 +1089,7 @@ class _AnimatedShotSizePreviewState extends State<_AnimatedShotSizePreview>
                 child: Text('16:9 · LIVE FRAME',
                     style: TextStyle(
                         color: ShotKitColors.dim,
-                        fontFamily: 'monospace',
+                        fontFamily: ShotKitFonts.mono,
                         fontSize: 9.5,
                         letterSpacing: .7))),
           ],
@@ -1465,7 +1477,7 @@ class _AnimatedAnglePreviewState extends State<_AnimatedAnglePreview>
                     key: ValueKey(widget.value),
                     style: const TextStyle(
                         color: ShotKitColors.tape,
-                        fontFamily: 'monospace',
+                        fontFamily: ShotKitFonts.mono,
                         fontWeight: FontWeight.w800,
                         letterSpacing: .8)),
               ),
@@ -1476,7 +1488,7 @@ class _AnimatedAnglePreviewState extends State<_AnimatedAnglePreview>
                 child: Text('ANGLE · LIVE VIEW',
                     style: TextStyle(
                         color: ShotKitColors.dim,
-                        fontFamily: 'monospace',
+                        fontFamily: ShotKitFonts.mono,
                         fontSize: 9.5,
                         letterSpacing: .7))),
           ],
@@ -1858,7 +1870,7 @@ class _AnimatedMovementPreviewState extends State<_AnimatedMovementPreview>
                     key: ValueKey(widget.value),
                     style: const TextStyle(
                         color: ShotKitColors.tape,
-                        fontFamily: 'monospace',
+                        fontFamily: ShotKitFonts.mono,
                         fontWeight: FontWeight.w800,
                         letterSpacing: .8)),
               ),
@@ -1869,7 +1881,7 @@ class _AnimatedMovementPreviewState extends State<_AnimatedMovementPreview>
                 child: Text('MOTION · LIVE LOOP',
                     style: TextStyle(
                         color: ShotKitColors.dim,
-                        fontFamily: 'monospace',
+                        fontFamily: ShotKitFonts.mono,
                         fontSize: 9.5,
                         letterSpacing: .7))),
           ],

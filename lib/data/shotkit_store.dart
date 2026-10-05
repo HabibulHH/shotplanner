@@ -181,11 +181,16 @@ class ShotKitStore extends ChangeNotifier {
     );
   }
 
-  Future<void> reorderShots(Scene scene, int oldIndex, int newIndex) async {
-    if (scene.shots.isNotEmpty && oldIndex != newIndex) {
-      if (newIndex > oldIndex) newIndex -= 1;
-      final shot = scene.shots.removeAt(oldIndex);
-      scene.shots.insert(newIndex, shot);
+  /// Legacy ReorderableListView semantics: [newIndex] counts the moved item
+  /// as still being in place.
+  Future<void> reorderShots(Scene scene, int oldIndex, int newIndex) =>
+      moveShot(scene, oldIndex, newIndex > oldIndex ? newIndex - 1 : newIndex);
+
+  /// Moves the shot at [from] so it ends up at index [to].
+  Future<void> moveShot(Scene scene, int from, int to) async {
+    if (scene.shots.isNotEmpty && from != to) {
+      final shot = scene.shots.removeAt(from);
+      scene.shots.insert(to, shot);
       notifyListeners();
     }
     await database.batch((batch) {
@@ -256,10 +261,14 @@ class ShotKitStore extends ChangeNotifier {
     Project project,
     int oldIndex,
     int newIndex,
-  ) async {
-    if (newIndex > oldIndex) newIndex -= 1;
-    final scene = project.scenes.removeAt(oldIndex);
-    project.scenes.insert(newIndex, scene);
+  ) =>
+      moveScene(
+          project, oldIndex, newIndex > oldIndex ? newIndex - 1 : newIndex);
+
+  /// Moves the scene at [from] so it ends up at index [to].
+  Future<void> moveScene(Project project, int from, int to) async {
+    final scene = project.scenes.removeAt(from);
+    project.scenes.insert(to, scene);
     notifyListeners();
     await database.batch((batch) {
       for (var index = 0; index < project.scenes.length; index++) {
@@ -391,6 +400,7 @@ class ShotKitStore extends ChangeNotifier {
 String _relativeDate(DateTime date) {
   final difference = DateTime.now().difference(date);
   if (difference.inMinutes < 2) return 'Just now';
+  if (difference.inHours < 1) return '${difference.inMinutes}m ago';
   if (difference.inHours < 24) return '${difference.inHours}h ago';
   if (difference.inDays < 7) return '${difference.inDays}d ago';
   return '${date.day}/${date.month}/${date.year}';

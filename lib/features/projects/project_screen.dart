@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/shot_code.dart';
+import '../../core/widgets/framing_glyph.dart';
 import '../../core/widgets/shotkit_widgets.dart';
 import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
@@ -18,6 +20,8 @@ class ProjectScreen extends StatefulWidget {
 }
 
 class _ProjectScreenState extends State<ProjectScreen> {
+  bool _reordering = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,138 +39,205 @@ class _ProjectScreenState extends State<ProjectScreen> {
   @override
   Widget build(BuildContext context) {
     final project = widget.project;
+    final scenes = project.scenes;
+    final mustLeft = scenes
+        .expand((scene) => scene.shots)
+        .where((shot) => shot.mustHave && !shot.isDone)
+        .length;
+    final sceneWord = scenes.length == 1 ? 'scene' : 'scenes';
+
     return Scaffold(
       body: Column(
         children: [
-          SlateHeader(
-            title: project.title,
-            subtitle: '${project.type} · ${project.shotCount} shots',
-            showBack: true,
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) async {
-                if (value == 'export') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ExportScreen(store: widget.store, project: project),
-                    ),
-                  );
-                } else if (value == 'archive') {
-                  await widget.store.archiveProject(project);
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: 'export',
-                  child: Text('Export production PDF'),
+          TopBar(
+            actions: [
+              CircleIconButton(
+                icon: Icons.ios_share_rounded,
+                tooltip: 'Export PDF',
+                onPressed: _openExport,
+              ),
+              MenuAnchor(
+                menuChildren: [
+                  MenuItemButton(
+                    leadingIcon: const Icon(Icons.picture_as_pdf_outlined),
+                    onPressed: _openExport,
+                    child: const Text('Export production PDF'),
+                  ),
+                  MenuItemButton(
+                    leadingIcon: const Icon(Icons.archive_outlined),
+                    onPressed: () async {
+                      await widget.store.archiveProject(project);
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                    child: const Text('Archive project'),
+                  ),
+                ],
+                builder: (context, controller, _) => CircleIconButton(
+                  icon: Icons.more_vert_rounded,
+                  tooltip: 'More options',
+                  onPressed: () => controller.isOpen
+                      ? controller.close()
+                      : controller.open(),
                 ),
-                PopupMenuItem(value: 'archive', child: Text('Archive project')),
-              ],
-            ),
+              ),
+            ],
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 112),
+              padding: const EdgeInsets.only(bottom: 40),
               children: [
-                _ProjectRunCard(
-                  project: project,
-                  onSet: _openOnSet,
-                  onExport: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ExportScreen(store: widget.store, project: project),
-                    ),
+                TitleBlock(
+                  eyebrow: '${project.type} · ${scenes.length} $sceneWord',
+                  title: project.title,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: StatStrip(
+                    stats: [
+                      (
+                        '${project.completed}/${project.shotCount}',
+                        'Shots done'
+                      ),
+                      ('$mustLeft', 'Must left'),
+                      ('${scenes.length}', sceneWord),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                SectionLabel(
-                  'Scene order',
-                  trailing: Text(
-                    '${project.completed}/${project.shotCount} DONE',
-                    style: const TextStyle(
-                      color: ShotKitColors.dim,
-                      fontFamily: 'monospace',
-                      fontSize: 10.5,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _openOnSet,
+                          icon: const Icon(
+                            Icons.radio_button_checked_rounded,
+                            size: 20,
+                          ),
+                          label: const Text('Start on-set'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton.icon(
+                        onPressed: _openExport,
+                        icon: const Icon(
+                          Icons.picture_as_pdf_outlined,
+                          size: 18,
+                        ),
+                        label: const Text('PDF'),
+                      ),
+                    ],
                   ),
                 ),
-                if (project.scenes.isEmpty)
-                  EmptySlate(
-                    title: 'Your slate is empty',
-                    body:
-                        'Add the first scene, then build its shot list in shooting order.',
-                    action: OutlinedButton.icon(
-                      onPressed: _showAddScene,
-                      icon: const Icon(Icons.add),
-                      label: const Text('ADD SCENE'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+                  child: SectionLabel(
+                    '${scenes.length} $sceneWord',
+                    trailing: scenes.length > 1
+                        ? TextButton(
+                            onPressed: () =>
+                                setState(() => _reordering = !_reordering),
+                            child: Text(_reordering ? 'Done' : 'Reorder'),
+                          )
+                        : null,
+                  ),
+                ),
+                if (scenes.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: EmptySlate(
+                      title: 'Your slate is empty',
+                      body:
+                          'Add the first scene, then build its shot list in shooting order.',
+                      action: FilledButton.icon(
+                        onPressed: _showAddScene,
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Add scene'),
+                      ),
                     ),
                   )
-                else
-                  ReorderableListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    buildDefaultDragHandles: false,
-                    itemCount: project.scenes.length,
-                    onReorder: (oldIndex, newIndex) =>
-                        widget.store.reorderScenes(project, oldIndex, newIndex),
-                    itemBuilder: (context, index) {
-                      final scene = project.scenes[index];
-                      return Padding(
-                        key: ValueKey(scene.id),
-                        padding: const EdgeInsets.only(bottom: 11),
-                        child: Row(children: [
-                          Expanded(
-                              child: _SceneCard(
-                            number: index + 1,
-                            scene: scene,
-                            onDuplicate: () =>
-                                widget.store.duplicateScene(project, scene),
-                            onDelete: () => _confirmDeleteScene(scene),
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SceneScreen(
-                                  store: widget.store,
-                                  project: project,
-                                  scene: scene,
-                                ),
-                              ),
-                            ),
-                          )),
-                          ReorderableDragStartListener(
-                            index: index,
-                            child: const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Icon(Icons.drag_indicator_rounded,
-                                  color: ShotKitColors.dim),
-                            ),
-                          ),
-                        ]),
-                      );
-                    },
+                else ...[
+                  if (_reordering)
+                    ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: scenes.length,
+                      onReorderItem: (from, to) =>
+                          widget.store.moveScene(project, from, to),
+                      itemBuilder: (context, index) => Padding(
+                        key: ValueKey(scenes[index].id),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _SceneCard(
+                          index: index,
+                          scene: scenes[index],
+                          store: widget.store,
+                          reordering: true,
+                          onTap: () {},
+                          onActions: () => _sceneActions(scenes[index]),
+                        ),
+                      ),
+                    )
+                  else
+                    for (var index = 0; index < scenes.length; index++)
+                      Padding(
+                        key: ValueKey(scenes[index].id),
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                        child: _SceneCard(
+                          index: index,
+                          scene: scenes[index],
+                          store: widget.store,
+                          reordering: false,
+                          onTap: () => _openScene(scenes[index]),
+                          onActions: () => _sceneActions(scenes[index]),
+                        ),
+                      ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: DashedAddButton(
+                      label: 'Add scene',
+                      onTap: _showAddScene,
+                    ),
                   ),
+                ],
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddScene,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('ADD SCENE'),
-      ),
     );
   }
 
+  void _openScene(Scene scene) => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SceneScreen(
+            store: widget.store,
+            project: widget.project,
+            scene: scene,
+          ),
+        ),
+      );
+
+  void _openExport() => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ExportScreen(store: widget.store, project: widget.project),
+        ),
+      );
+
   void _openOnSet() {
-    final scene = widget.project.scenes.cast<Scene?>().firstWhere(
-          (scene) => scene!.shots.isNotEmpty,
-          orElse: () => null,
-        );
+    final scenes = widget.project.scenes;
+    final scene = scenes.cast<Scene?>().firstWhere(
+              (scene) => scene!.shots.any((shot) => !shot.isDone),
+              orElse: () => null,
+            ) ??
+        scenes.cast<Scene?>().firstWhere(
+              (scene) => scene!.shots.isNotEmpty,
+              orElse: () => null,
+            );
     if (scene == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -187,6 +258,45 @@ class _ProjectScreenState extends State<ProjectScreen> {
     );
   }
 
+  Future<void> _sceneActions(Scene scene) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SheetHandle(),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: const Icon(Icons.copy_rounded),
+                title: const Text('Duplicate scene'),
+                onTap: () => Navigator.pop(context, 'duplicate'),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: ShotKitColors.record,
+                ),
+                title: const Text(
+                  'Delete scene',
+                  style: TextStyle(color: ShotKitColors.record),
+                ),
+                onTap: () => Navigator.pop(context, 'delete'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (action == 'duplicate') {
+      await widget.store.duplicateScene(widget.project, scene);
+    } else if (action == 'delete') {
+      await _confirmDeleteScene(scene);
+    }
+  }
+
   Future<void> _showAddScene() async {
     final title = TextEditingController();
     final location = TextEditingController();
@@ -195,89 +305,106 @@ class _ProjectScreenState extends State<ProjectScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            14,
-            16,
-            MediaQuery.viewInsetsOf(context).bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: ShotKitColors.line,
-                    borderRadius: BorderRadius.circular(4),
+        builder: (context, setSheetState) {
+          void add() {
+            if (title.text.trim().isEmpty) return;
+            widget.store.addScene(
+              widget.project,
+              title.text.trim(),
+              location.text.trim().isEmpty
+                  ? 'Location TBC'
+                  : location.text.trim(),
+              tag,
+            );
+            Navigator.pop(context);
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              12,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SheetHandle(),
+                const SizedBox(height: 18),
+                Text(
+                  'Add scene',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: title,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Scene name',
+                    hintText: 'e.g. Couple first look',
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Add scene',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: title,
-                autofocus: true,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Scene name',
-                  hintText: 'e.g. Couple first look',
+                const SizedBox(height: 12),
+                TextField(
+                  controller: location,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => add(),
+                  decoration: const InputDecoration(
+                    labelText: 'Location',
+                    hintText: 'Set or venue',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: location,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Location',
-                  hintText: 'Set or venue',
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                children: TimeOfDayTag.values
-                    .map(
-                      (item) => ChoiceChip(
-                        label: Text(item.label),
+                const SizedBox(height: 16),
+                const Text('TIME OF DAY', style: ShotKitText.label),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final item in TimeOfDayTag.values)
+                      ChoiceChip(
+                        avatar: Icon(
+                          timeOfDayIcon(item),
+                          size: 16,
+                          color: tag == item
+                              ? ShotKitColors.tapeInk
+                              : ShotKitColors.tape,
+                        ),
+                        label: Text(timeOfDayName(item)),
                         selected: tag == item,
+                        showCheckmark: false,
                         onSelected: (_) => setSheetState(() => tag = item),
+                        selectedColor: ShotKitColors.tape,
+                        backgroundColor: ShotKitColors.surface,
+                        side: BorderSide(
+                          color: tag == item
+                              ? ShotKitColors.tape
+                              : ShotKitColors.line,
+                        ),
+                        labelStyle: TextStyle(
+                          color: tag == item
+                              ? ShotKitColors.tapeInk
+                              : ShotKitColors.paper,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    if (title.text.trim().isEmpty) return;
-                    widget.store.addScene(
-                      widget.project,
-                      title.text.trim(),
-                      location.text.trim().isEmpty
-                          ? 'Location TBC'
-                          : location.text.trim(),
-                      tag,
-                    );
-                    Navigator.pop(context);
-                  },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Text('ADD TO SLATE'),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: add,
+                    child: const Text('Add scene'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
     // Delay disposal until the sheet's exit animation has released the fields.
@@ -296,11 +423,17 @@ class _ProjectScreenState extends State<ProjectScreen> {
             '${scene.title} and all ${scene.shots.length} shots will be removed.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('CANCEL')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('DELETE')),
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: ShotKitColors.record,
+              foregroundColor: ShotKitColors.tapeInk,
+            ),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -310,185 +443,176 @@ class _ProjectScreenState extends State<ProjectScreen> {
   }
 }
 
-class _ProjectRunCard extends StatelessWidget {
-  const _ProjectRunCard({
-    required this.project,
-    required this.onSet,
-    required this.onExport,
+class _SceneCard extends StatelessWidget {
+  const _SceneCard({
+    required this.index,
+    required this.scene,
+    required this.store,
+    required this.reordering,
+    required this.onTap,
+    required this.onActions,
   });
-  final Project project;
-  final VoidCallback onSet;
-  final VoidCallback onExport;
+  final int index;
+  final Scene scene;
+  final ShotKitStore store;
+  final bool reordering;
+  final VoidCallback onTap;
+  final VoidCallback onActions;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: ShotKitColors.raised,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ShotKitColors.line),
+    final golden = scene.timeOfDay == TimeOfDayTag.golden;
+    return Material(
+      color: ShotKitColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: ShotKitColors.line),
       ),
-      child: Column(
-        children: [
-          Row(
+      child: InkWell(
+        onTap: reordering ? null : onTap,
+        onLongPress: reordering ? null : onActions,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          child: Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'PRODUCTION RUN',
-                      style: Theme.of(context).textTheme.labelSmall,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          sceneCode(index),
+                          style: ShotKitText.mono(
+                            size: 12,
+                            weight: FontWeight.w700,
+                            color: ShotKitColors.tape,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            scene.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${scene.completed}/${scene.shots.length}',
+                          style: ShotKitText.mono(size: 12),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${(project.progress * 100).round()}% in the can',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    const SizedBox(height: 8),
+                    MetaRow(
+                      items: [
+                        MetaItem(
+                          icon: Icons.place_outlined,
+                          text: scene.location,
+                        ),
+                        MetaItem(
+                          icon: timeOfDayIcon(scene.timeOfDay),
+                          text: timeOfDayName(scene.timeOfDay),
+                          color:
+                              golden ? ShotKitColors.tape : ShotKitColors.dim,
+                        ),
+                      ],
+                    ),
+                    if (scene.shots.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _Filmstrip(shots: scene.shots, store: store),
+                    ],
+                    const SizedBox(height: 10),
+                    FilmProgress(
+                      value: scene.progress,
+                      color: ShotKitColors.success,
                     ),
                   ],
                 ),
               ),
-              Text(
-                '${project.completed} / ${project.shotCount}',
-                style: const TextStyle(
-                  color: ShotKitColors.tape,
-                  fontFamily: 'monospace',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+              if (reordering) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: onActions,
+                  tooltip: 'Scene actions',
+                  icon: const Icon(Icons.more_vert_rounded),
+                  color: ShotKitColors.dim,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          FilmProgress(value: project.progress, height: 7),
-          const SizedBox(height: 15),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onSet,
-                  icon: const Icon(
-                    Icons.radio_button_checked_rounded,
-                    size: 18,
-                  ),
-                  label: const Text('ON-SET MODE'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.drag_indicator_rounded,
+                      color: ShotKitColors.dim,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              IconButton.outlined(
-                onPressed: onExport,
-                tooltip: 'Export PDF',
-                icon: const Icon(Icons.ios_share_rounded),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(50, 48),
-                  side: const BorderSide(color: ShotKitColors.line),
-                ),
-              ),
+              ],
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SceneCard extends StatelessWidget {
-  const _SceneCard({
-    required this.number,
-    required this.scene,
-    required this.onTap,
-    required this.onDuplicate,
-    required this.onDelete,
-  });
-  final int number;
-  final Scene scene;
-  final VoidCallback onTap;
-  final VoidCallback onDuplicate;
-  final VoidCallback onDelete;
+/// A row of shot thumbnails that fits the card width, ending in "+n".
+class _Filmstrip extends StatelessWidget {
+  const _Filmstrip({required this.shots, required this.store});
+  final List<Shot> shots;
+  final ShotKitStore store;
+
+  static const _width = 42.0;
+  static const _height = 25.0;
+  static const _gap = 5.0;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'SC ${number.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      color: ShotKitColors.tape,
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      scene.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  DataPill(scene.timeOfDay.label),
-                  const SizedBox(width: 4),
-                  PopupMenuButton<String>(
-                    padding: EdgeInsets.zero,
-                    onSelected: (value) {
-                      if (value == 'duplicate') onDuplicate();
-                      if (value == 'delete') onDelete();
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                          value: 'duplicate', child: Text('Duplicate scene')),
-                      PopupMenuItem(
-                          value: 'delete', child: Text('Delete scene')),
-                    ],
-                  ),
-                ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fits = ((constraints.maxWidth + _gap) / (_width + _gap)).floor();
+        final overflow = shots.length > fits;
+        final visible = overflow ? fits - 1 : shots.length;
+        return Row(
+          children: [
+            for (var i = 0; i < visible; i++) ...[
+              if (i > 0) const SizedBox(width: _gap),
+              Opacity(
+                opacity: shots[i].isDone ? .45 : 1,
+                child: ShotThumb(
+                  shot: shots[i],
+                  media: store.media,
+                  width: _width,
+                  height: _height,
+                  radius: 5,
+                ),
               ),
-              const SizedBox(height: 7),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 14,
-                    color: ShotKitColors.dim,
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      scene.location,
-                      style: const TextStyle(
-                        color: ShotKitColors.dim,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${scene.completed}/${scene.shots.length}',
-                    style: const TextStyle(
-                      color: ShotKitColors.dim,
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              FilmProgress(value: scene.progress),
             ],
-          ),
-        ),
-      ),
+            if (overflow) ...[
+              const SizedBox(width: _gap),
+              Container(
+                width: _width,
+                height: _height,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: ShotKitColors.raised,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  '+${shots.length - visible}',
+                  style: ShotKitText.mono(size: 10, weight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

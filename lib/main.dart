@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'core/theme/app_theme.dart';
 import 'data/shotkit_store.dart';
@@ -6,7 +8,18 @@ import 'features/projects/projects_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(_fontLicenses);
   runApp(const ShotKitApp());
+}
+
+Stream<LicenseEntry> _fontLicenses() async* {
+  for (final (family, file) in [
+    ('Archivo', 'OFL-Archivo.txt'),
+    ('JetBrains Mono', 'OFL-JetBrainsMono.txt'),
+  ]) {
+    final text = await rootBundle.loadString('assets/fonts/$file');
+    yield LicenseEntryWithLineBreaks([family], text);
+  }
 }
 
 class ShotKitApp extends StatefulWidget {

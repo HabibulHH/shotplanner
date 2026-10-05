@@ -28,3 +28,35 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/fonts/OFL-Archivo.txt
+    - assets/fonts/OFL-JetBrainsMono.txt
+  fonts:
+    - family: Archivo
+      fonts:
+        - asset: assets/fonts/Archivo-Regular.ttf
+        - asset: assets/fonts/Archivo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Archivo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Archivo-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Archivo-ExtraBold.ttf
+          weight: 800
+    - family: ArchivoSemiCondensed
+      fonts:
+        - asset: assets/fonts/ArchivoSemiCondensed-ExtraBold.ttf
+          weight: 800
+    - family: ArchivoCondensed
+      fonts:
+        - asset: assets/fonts/ArchivoCondensed-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/ArchivoCondensed-Black.ttf
+          weight: 900
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono-Bold.ttf
+          weight: 700

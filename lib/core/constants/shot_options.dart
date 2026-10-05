@@ -72,4 +72,11 @@ abstract final class ShotOptions {
   ];
   static const lenses = ['16mm', '24mm', '35mm', '50mm', '85mm', '70–200'];
   static const cameras = ['A-Cam', 'B-Cam', 'Drone'];
+
+  // Neutral framing for shots added from the quick-add bar; refined later in
+  // the shot builder.
+  static const quickSize = 'MS';
+  static const quickAngle = 'Eye level';
+  static const quickMovement = 'Static';
+  static const quickLens = '35mm';
 }

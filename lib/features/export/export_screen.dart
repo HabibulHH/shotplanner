@@ -28,143 +28,163 @@ class _ExportScreenState extends State<ExportScreen> {
     return Scaffold(
       body: Column(
         children: [
-          SlateHeader(
-            title: 'Export PDF',
-            subtitle:
-                '${widget.project.title} · ${widget.project.scenes.length} scenes · ${widget.project.shotCount} shots',
-            showBack: true,
-          ),
+          const TopBar(),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
+              padding: const EdgeInsets.only(bottom: 32),
               children: [
-                Container(
-                  padding: const EdgeInsets.all(13),
-                  decoration: BoxDecoration(
-                    color: ShotKitColors.success.withValues(alpha: .08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: ShotKitColors.success.withValues(alpha: .3),
-                    ),
+                TitleBlock(
+                  eyebrow: widget.project.title,
+                  title: 'Export PDF',
+                  meta: Text(
+                    '${widget.project.scenes.length} scenes · ${widget.project.shotCount} shots',
+                    style: const TextStyle(color: ShotKitColors.dim),
                   ),
-                  child: const Row(
+                ),
+                const SizedBox(height: 18),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(
-                        Icons.offline_bolt_outlined,
-                        color: ShotKitColors.success,
-                      ),
-                      SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Container(
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(
+                          color: ShotKitColors.success.withValues(alpha: .08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: ShotKitColors.success.withValues(alpha: .3),
+                          ),
+                        ),
+                        child: const Row(
                           children: [
-                            Text(
-                              'BUILT ENTIRELY ON YOUR PHONE',
-                              style: TextStyle(
-                                color: ShotKitColors.success,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: .6,
-                              ),
+                            Icon(
+                              Icons.offline_bolt_outlined,
+                              color: ShotKitColors.success,
                             ),
-                            SizedBox(height: 3),
-                            Text(
-                              'No upload, account, or internet connection.',
-                              style: TextStyle(
-                                color: ShotKitColors.dim,
-                                fontSize: 12,
+                            SizedBox(width: 11),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'BUILT ENTIRELY ON YOUR PHONE',
+                                    style: TextStyle(
+                                      color: ShotKitColors.success,
+                                      fontFamily: ShotKitFonts.mono,
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  SizedBox(height: 3),
+                                  Text(
+                                    'No upload, account, or internet connection.',
+                                    style: TextStyle(
+                                      color: ShotKitColors.dim,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const SectionLabel('Choose a layout'),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _LayoutCard(
-                        title: 'Detailed',
-                        subtitle: 'Scene pages + frames',
-                        selected: detailed,
-                        detailed: true,
-                        onTap: () => setState(() => detailed = true),
+                      const SizedBox(height: 24),
+                      const SectionLabel('Choose a layout'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _LayoutCard(
+                              title: 'Detailed',
+                              subtitle: 'Scene pages + frames',
+                              selected: detailed,
+                              detailed: true,
+                              onTap: () => setState(() => detailed = true),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _LayoutCard(
+                              title: 'Compact',
+                              subtitle: 'Clipboard table',
+                              selected: !detailed,
+                              detailed: false,
+                              onTap: () => setState(() => detailed = false),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _LayoutCard(
-                        title: 'Compact',
-                        subtitle: 'Clipboard table',
-                        selected: !detailed,
-                        detailed: false,
-                        onTap: () => setState(() => detailed = false),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 22),
-                const SectionLabel('Document options'),
-                SwitchListTile.adaptive(
-                  value: includeCompleted,
-                  onChanged: (value) =>
-                      setState(() => includeCompleted = value),
-                  title: const Text('Include completion marks'),
-                  subtitle: const Text(
-                    'Useful for crew handoff',
-                    style: TextStyle(color: ShotKitColors.dim),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 2),
-                  activeTrackColor: ShotKitColors.tape,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: ShotKitColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: ShotKitColors.line),
-                  ),
-                  child: const Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.verified_user_outlined,
-                        color: ShotKitColors.tape,
-                        size: 21,
-                      ),
-                      SizedBox(width: 11),
-                      Expanded(
-                        child: Text(
-                          'Every generated file is checked for pages and file size before the share sheet opens. Missing frames become labelled placeholders—never a blank export.',
-                          style: TextStyle(
-                            color: ShotKitColors.dim,
-                            height: 1.45,
-                            fontSize: 12.5,
+                      const SizedBox(height: 22),
+                      const SectionLabel('Document options'),
+                      Material(
+                        color: ShotKitColors.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: ShotKitColors.line),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: SwitchListTile(
+                          value: includeCompleted,
+                          onChanged: (value) =>
+                              setState(() => includeCompleted = value),
+                          title: const Text(
+                            'Include completion marks',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          subtitle: const Text(
+                            'Useful for crew handoff',
+                            style: TextStyle(color: ShotKitColors.dim),
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: ShotKitColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: ShotKitColors.line),
+                        ),
+                        child: const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.verified_user_outlined,
+                              color: ShotKitColors.tape,
+                              size: 21,
+                            ),
+                            SizedBox(width: 11),
+                            Expanded(
+                              child: Text(
+                                'Every generated file is checked for pages and file size before the share sheet opens. Missing frames become labelled placeholders—never a blank export.',
+                                style: TextStyle(
+                                  color: ShotKitColors.dim,
+                                  height: 1.45,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      FilledButton.icon(
+                        onPressed: preparing ? null : _prepare,
+                        icon: preparing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.picture_as_pdf_outlined),
+                        label: Text(
+                          preparing ? 'Checking pages…' : 'Create PDF & share',
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                FilledButton.icon(
-                  onPressed: preparing ? null : _prepare,
-                  icon: preparing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.picture_as_pdf_outlined),
-                  label: Text(
-                    preparing ? 'CHECKING PAGES…' : 'CREATE PDF & SHARE',
-                  ),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
                   ),
                 ),
               ],
@@ -260,7 +280,7 @@ class _LayoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(18),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 170),
         padding: const EdgeInsets.all(12),
@@ -268,7 +288,7 @@ class _LayoutCard extends StatelessWidget {
           color: selected
               ? ShotKitColors.tape.withValues(alpha: .08)
               : ShotKitColors.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: selected ? ShotKitColors.tape : ShotKitColors.line,
             width: selected ? 1.5 : 1,
