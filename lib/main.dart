@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'core/theme/app_theme.dart';
 import 'data/shotkit_store.dart';
-import 'features/projects/projects_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,7 +64,7 @@ class _ShotKitAppState extends State<ShotKitApp> {
               body: Center(child: CircularProgressIndicator()),
             );
           }
-          return ProjectsScreen(store: store);
+          return DashboardScreen(store: store);
         },
       ),
     );

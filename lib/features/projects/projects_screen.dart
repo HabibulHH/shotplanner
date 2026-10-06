@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/shot_code.dart';
 import '../../core/widgets/framing_glyph.dart';
 import '../../core/widgets/shotkit_widgets.dart';
 import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
-import '../onset/onset_screen.dart';
+import '../onset/onset_launcher.dart';
 import '../settings/settings_screen.dart';
+import 'new_project_sheet.dart';
+import 'project_row.dart';
 import 'project_screen.dart';
-
-const _templates = [
-  'Wedding',
-  'Interview',
-  'Music video',
-  'Short film',
-  'Blank'
-];
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key, required this.store});
@@ -133,7 +126,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         key: ValueKey(project.id),
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _showArchived
-                            ? _ProjectRow(
+                            ? ProjectRow(
                                 project: project,
                                 onTap: () => _openProject(project),
                                 trailing: TextButton(
@@ -145,7 +138,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                             : _ArchivableRow(
                                 project: project,
                                 onArchive: () => _archive(project),
-                                child: _ProjectRow(
+                                child: ProjectRow(
                                   project: project,
                                   onTap: () => _openProject(project),
                                 ),
@@ -157,12 +150,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     height: 44,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: _templates.length,
+                      itemCount: kProjectTemplates.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) => _TemplateChip(
-                        label: _templates[index],
+                      itemBuilder: (context, index) => TemplateChip(
+                        label: kProjectTemplates[index],
                         onTap: () =>
-                            _showNewProject(template: _templates[index]),
+                            _showNewProject(template: kProjectTemplates[index]),
                       ),
                     ),
                   ),
@@ -173,6 +166,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
       ),
       bottomNavigationBar: ShotKitNavBar(
+        onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
         onProjects: () => setState(() => _showArchived = false),
         onOnSet: _openOnSet,
         onKit: () => Navigator.push(
@@ -209,182 +203,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       );
   }
 
-  void _openOnSetFor(Project project) {
-    final scene = project.scenes.cast<Scene?>().firstWhere(
-          (scene) => scene!.shots.any((shot) => !shot.isDone),
-          orElse: () => null,
-        );
-    if (scene == null) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OnSetScreen(
-          store: widget.store,
-          project: project,
-          scene: scene,
-        ),
-      ),
-    );
-  }
+  void _openOnSetFor(Project project) =>
+      openOnSetForProject(context, widget.store, project);
 
-  Future<void> _openOnSet() async {
-    final choices = <({Project project, Scene scene, int index})>[];
-    for (final project in widget.store.activeProjects) {
-      for (var i = 0; i < project.scenes.length; i++) {
-        if (project.scenes[i].shots.isNotEmpty) {
-          choices.add((project: project, scene: project.scenes[i], index: i));
-        }
-      }
-    }
-    if (choices.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Add at least one shot before entering On-set mode.'),
-        ),
-      );
-      return;
-    }
-
-    var selected = choices.first;
-    if (choices.length > 1) {
-      final result = await showModalBottomSheet<
-          ({Project project, Scene scene, int index})>(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) => SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * .75,
-            ),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              children: [
-                const SheetHandle(),
-                const SizedBox(height: 14),
-                Text(
-                  'Go on set',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Pick the scene you are shooting now.',
-                  style: TextStyle(color: ShotKitColors.dim),
-                ),
-                const SizedBox(height: 14),
-                for (final choice in choices)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _SceneChoice(
-                      code: sceneCode(choice.index),
-                      title: choice.scene.title,
-                      subtitle: choice.project.title,
-                      progress:
-                          '${choice.scene.completed}/${choice.scene.shots.length}',
-                      onTap: () => Navigator.pop(context, choice),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-      if (result == null) return;
-      selected = result;
-    }
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OnSetScreen(
-          store: widget.store,
-          project: selected.project,
-          scene: selected.scene,
-        ),
-      ),
-    );
-  }
+  Future<void> _openOnSet() => openOnSetPicker(context, widget.store);
 
   Future<void> _showNewProject({String template = 'Wedding'}) async {
-    final titleController = TextEditingController();
-    var selected = template;
-    final created = await showModalBottomSheet<Project>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          Future<void> create() async {
-            final title = titleController.text.trim();
-            if (title.isEmpty) return;
-            final project = await widget.store.addProject(title, selected);
-            if (context.mounted) Navigator.pop(context, project);
-          }
-
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              12,
-              20,
-              MediaQuery.viewInsetsOf(context).bottom + 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SheetHandle(),
-                const SizedBox(height: 18),
-                Text(
-                  'New project',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Pick a starting template. Everything stays editable.',
-                  style: TextStyle(color: ShotKitColors.dim),
-                ),
-                const SizedBox(height: 18),
-                TextField(
-                  controller: titleController,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.words,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => create(),
-                  decoration: const InputDecoration(
-                    labelText: 'Project title',
-                    hintText: 'e.g. Nabila & Arif Wedding',
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Text('TEMPLATE', style: ShotKitText.label),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final item in _templates)
-                      _TemplateChip(
-                        label: item,
-                        selected: selected == item,
-                        onTap: () => setSheetState(() => selected = item),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: create,
-                    child: const Text('Create project'),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-    // Delay disposal until the sheet's exit animation has released the field.
-    Future<void>.delayed(const Duration(seconds: 1), titleController.dispose);
+    final created =
+        await showNewProjectSheet(context, widget.store, template: template);
     if (created != null && mounted) _openProject(created);
   }
 }
@@ -573,105 +399,6 @@ class _NextUpCard extends StatelessWidget {
   }
 }
 
-class _ProjectRow extends StatelessWidget {
-  const _ProjectRow(
-      {required this.project, required this.onTap, this.trailing});
-  final Project project;
-  final VoidCallback onTap;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final wrapped =
-        project.shotCount > 0 && project.completed == project.shotCount;
-    final scenes =
-        '${project.scenes.length} ${project.scenes.length == 1 ? 'SCENE' : 'SCENES'}';
-    return Material(
-      color: ShotKitColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(color: ShotKitColors.line),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: ShotKitColors.raised,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
-                  projectTypeIcon(project.type),
-                  color: ShotKitColors.tape,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            project.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          wrapped
-                              ? 'WRAPPED'
-                              : '${project.completed}/${project.shotCount}',
-                          style: ShotKitText.mono(
-                            size: 12,
-                            weight: wrapped ? FontWeight.w700 : FontWeight.w500,
-                            color: wrapped
-                                ? ShotKitColors.success
-                                : ShotKitColors.dim,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${project.type} · $scenes · ${project.updatedLabel}'
-                          .toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ShotKitText.mono(size: 10.5, spacing: .8),
-                    ),
-                    const SizedBox(height: 8),
-                    FilmProgress(value: project.progress),
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 6),
-                trailing!,
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Swipe a project away to archive it.
 class _ArchivableRow extends StatelessWidget {
   const _ArchivableRow({
@@ -712,130 +439,6 @@ class _ArchivableRow extends StatelessWidget {
         ),
       ),
       child: child,
-    );
-  }
-}
-
-class _TemplateChip extends StatelessWidget {
-  const _TemplateChip({
-    required this.label,
-    required this.onTap,
-    this.selected = false,
-  });
-  final String label;
-  final VoidCallback onTap;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon =
-        label == 'Blank' ? Icons.add_box_outlined : projectTypeIcon(label);
-    return Material(
-      color: selected ? ShotKitColors.tape : ShotKitColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: selected ? ShotKitColors.tape : ShotKitColors.line,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected ? ShotKitColors.tapeInk : ShotKitColors.tape,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? ShotKitColors.tapeInk : ShotKitColors.paper,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SceneChoice extends StatelessWidget {
-  const _SceneChoice({
-    required this.code,
-    required this.title,
-    required this.subtitle,
-    required this.progress,
-    required this.onTap,
-  });
-  final String code;
-  final String title;
-  final String subtitle;
-  final String progress;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: ShotKitColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: ShotKitColors.line),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Text(
-                code,
-                style: ShotKitText.mono(
-                  size: 12,
-                  weight: FontWeight.w700,
-                  color: ShotKitColors.tape,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: ShotKitColors.dim,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(progress, style: ShotKitText.mono(size: 12)),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right_rounded, color: ShotKitColors.dim),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

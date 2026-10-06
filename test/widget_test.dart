@@ -24,12 +24,21 @@ Future<ShotKitStore> seededStore() async {
   return store;
 }
 
+/// The dashboard's dust drifts forever, so settle it with reduced motion.
+void useStillMotion(WidgetTester tester) {
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+}
+
 Widget themed(Widget child) =>
     MaterialApp(theme: buildShotKitTheme(), home: child);
 
 void main() {
-  testWidgets('home shows the next project and opens it', (tester) async {
+  testWidgets('home dashboard shows the focus project and opens it',
+      (tester) async {
     usePhoneSize(tester);
+    useStillMotion(tester);
     final store = await seededStore();
     await store.addProject('Rahim & Ayesha', 'Wedding');
 
@@ -37,16 +46,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('SHOTKIT'), findsOneWidget);
-    expect(find.text('UP NEXT'), findsOneWidget);
-    // Once in the "Up next" card, once in the project list.
-    expect(find.text('Rahim & Ayesha'), findsNWidgets(2));
+    expect(find.text("TODAY'S FOCUS"), findsOneWidget);
+    expect(find.text('Rahim & Ayesha'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    // The stat tiles count up to the real numbers.
+    expect(find.text('Projects'), findsOneWidget);
+    expect(find.text('Must-haves left'.toUpperCase()), findsOneWidget);
 
-    await tester.tap(find.text('Rahim & Ayesha').last);
+    await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
     expect(find.text('RAHIM & AYESHA'), findsOneWidget);
     expect(find.text('Start on-set'), findsOneWidget);
     expect(find.text('Prep & details'), findsOneWidget);
+    store.dispose();
+  });
+
+  testWidgets('dashboard with no projects offers a first slate',
+      (tester) async {
+    usePhoneSize(tester);
+    useStillMotion(tester);
+    final store = await seededStore();
+
+    await tester.pumpWidget(ShotKitApp(store: store));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Slate your first production'), findsOneWidget);
+    expect(find.text('Recent projects'.toUpperCase()), findsNothing);
+
+    await tester.tap(find.text('Projects').last);
+    await tester.pumpAndSettle();
+    // The Projects tab opens the full list, which has its own Home tab back.
+    expect(find.text('Start from a template'.toUpperCase()), findsOneWidget);
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('SHOTKIT'), findsOneWidget);
     store.dispose();
   });
 

@@ -10,6 +10,7 @@ import 'package:shotkit/core/theme/app_theme.dart';
 import 'package:shotkit/data/app_database.dart';
 import 'package:shotkit/data/models.dart';
 import 'package:shotkit/data/shotkit_store.dart';
+import 'package:shotkit/features/dashboard/dashboard_screen.dart';
 import 'package:shotkit/features/export/export_screen.dart';
 import 'package:shotkit/features/onset/onset_screen.dart';
 import 'package:shotkit/features/projects/project_screen.dart';
@@ -37,15 +38,25 @@ typedef _Demo = ({
 });
 
 class _Case {
-  const _Case(this.name, this.build, {this.act, this.daylight = false});
+  const _Case(
+    this.name,
+    this.build, {
+    this.act,
+    this.daylight = false,
+    this.still = false,
+  });
   final String name;
   final Widget Function(_Demo demo) build;
   final Future<void> Function(WidgetTester tester, _Demo demo)? act;
   final bool daylight;
+
+  /// Runs with reduced motion, for screens with ambient looping animation.
+  final bool still;
 }
 
 final _cases = <_Case>[
-  _Case('home', (d) => ProjectsScreen(store: d.store)),
+  _Case('dashboard', (d) => DashboardScreen(store: d.store), still: true),
+  _Case('projects', (d) => ProjectsScreen(store: d.store)),
   _Case(
     'home · archived tab',
     (d) => ProjectsScreen(store: d.store),
@@ -183,6 +194,12 @@ Future<void> _check(
   FlutterError.onError =
       (details) => problems.add('[$label] ${_describe(details)}');
   try {
+    if (c.still) {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+          tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    }
     final demo = await _seed(daylight: c.daylight);
     await tester.pumpWidget(
       MaterialApp(theme: buildShotKitTheme(), home: c.build(demo)),

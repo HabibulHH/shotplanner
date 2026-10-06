@@ -809,7 +809,7 @@ class SheetHandle extends StatelessWidget {
   }
 }
 
-enum NavTab { projects, onSet, kit }
+enum NavTab { home, projects, onSet, kit }
 
 class ShotKitNavBar extends StatelessWidget {
   const ShotKitNavBar({
@@ -817,9 +817,12 @@ class ShotKitNavBar extends StatelessWidget {
     required this.onProjects,
     required this.onOnSet,
     required this.onKit,
+    this.onHome,
     this.active = NavTab.projects,
   });
 
+  /// The Home tab only shows when a handler is given.
+  final VoidCallback? onHome;
   final VoidCallback onProjects;
   final VoidCallback onOnSet;
   final VoidCallback onKit;
@@ -841,6 +844,17 @@ class ShotKitNavBar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
             child: Row(
               children: [
+                if (onHome != null) ...[
+                  Expanded(
+                    child: _NavItem(
+                      label: 'Home',
+                      icon: Icons.space_dashboard_outlined,
+                      selected: active == NavTab.home,
+                      onTap: onHome!,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
                 Expanded(
                   child: _NavItem(
                     label: 'Projects',
@@ -924,12 +938,16 @@ class _NavItem extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
