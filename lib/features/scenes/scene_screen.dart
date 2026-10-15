@@ -10,6 +10,7 @@ import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
 import '../onset/onset_screen.dart';
 import '../shots/shot_editor_sheet.dart';
+import '../unlock/unlock_sheet.dart';
 
 class SceneScreen extends StatefulWidget {
   const SceneScreen({
@@ -146,8 +147,7 @@ class _SceneScreenState extends State<SceneScreen> {
                       'Shot list',
                       trailing: shots.length > 1
                           ? TextButton(
-                              onPressed: () =>
-                                  setState(() => _reordering = !_reordering),
+                              onPressed: _toggleReorder,
                               child: Text(_reordering ? 'Done' : 'Reorder'),
                             )
                           : null,
@@ -195,8 +195,7 @@ class _SceneScreenState extends State<SceneScreen> {
                                   .toggleShot(widget.project, scene, shot);
                             },
                             onEdit: () => _editShot(shot),
-                            onDuplicate: () => widget.store
-                                .duplicateShot(widget.project, scene, shot),
+                            onDuplicate: () => _duplicateShot(shot),
                             onDelete: () => _deleteShot(shot),
                           ),
                         );
@@ -217,7 +216,13 @@ class _SceneScreenState extends State<SceneScreen> {
     );
   }
 
+  Future<void> _toggleReorder() async {
+    if (!_reordering && !await ensureCanEdit(context, widget.store)) return;
+    if (mounted) setState(() => _reordering = !_reordering);
+  }
+
   Future<void> _submitQuickAdd() async {
+    if (!await ensureCanEdit(context, widget.store) || !mounted) return;
     final text = _quickAdd.text.trim();
     if (text.isEmpty) {
       await _addShot();
@@ -246,6 +251,7 @@ class _SceneScreenState extends State<SceneScreen> {
   }
 
   Future<void> _addShot({String? initialDescription}) async {
+    if (!await ensureCanEdit(context, widget.store)) return;
     var description = initialDescription?.trim();
     var addAnother = true;
     while (addAnother) {
@@ -288,7 +294,10 @@ class _SceneScreenState extends State<SceneScreen> {
       widget.store.media,
       existing: shot,
     );
-    if (draft == null) return;
+    // Read-only users can still open a shot to see its details; saving asks
+    // for the unlock before anything changes.
+    if (draft == null || !mounted) return;
+    if (!await ensureCanEdit(context, widget.store)) return;
     shot
       ..description = draft.description
       ..size = draft.size
@@ -303,7 +312,13 @@ class _SceneScreenState extends State<SceneScreen> {
     await widget.store.updateShot(widget.project, shot);
   }
 
+  Future<void> _duplicateShot(Shot shot) async {
+    if (!await ensureCanEdit(context, widget.store)) return;
+    await widget.store.duplicateShot(widget.project, widget.scene, shot);
+  }
+
   Future<void> _deleteShot(Shot shot) async {
+    if (!await ensureCanEdit(context, widget.store)) return;
     await widget.store.deleteShot(widget.project, widget.scene, shot);
     if (!mounted) return;
     _snack('Deleted “${shot.description}”');

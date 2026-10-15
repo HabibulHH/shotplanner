@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/shotkit_widgets.dart';
 import '../../data/shotkit_store.dart';
+import '../unlock/unlock_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -68,6 +69,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const SectionLabel('ShotKit'),
+                      ListenableBuilder(
+                        listenable: widget.store.unlock,
+                        builder: (context, _) {
+                          final unlock = widget.store.unlock;
+                          return _SettingsTile(
+                            icon: accessIcon(unlock),
+                            title: accessTitle(unlock),
+                            subtitle: accessSubtitle(unlock),
+                            onTap: unlock.isUnlocked
+                                ? null
+                                : () => showUnlockSheet(context, widget.store),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 14),
                       const SectionLabel('On set'),
                       _SettingSwitch(
                         icon: Icons.screen_lock_portrait_outlined,
@@ -271,7 +288,7 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -294,10 +311,12 @@ class _SettingsTile extends StatelessWidget {
             subtitle,
             style: const TextStyle(color: ShotKitColors.dim, fontSize: 12.5),
           ),
-          trailing: const Icon(
-            Icons.chevron_right_rounded,
-            color: ShotKitColors.dim,
-          ),
+          trailing: onTap == null
+              ? null
+              : const Icon(
+                  Icons.chevron_right_rounded,
+                  color: ShotKitColors.dim,
+                ),
         ),
       ),
     );

@@ -8,6 +8,7 @@ import '../../data/models.dart';
 import '../../data/shotkit_store.dart';
 import '../onset/onset_screen.dart';
 import '../settings/settings_screen.dart';
+import '../unlock/unlock_sheet.dart';
 import 'project_screen.dart';
 
 const _templates = [
@@ -72,6 +73,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
                 children: [
+                  if (!widget.store.unlock.isUnlocked) ...[
+                    UnlockBanner(store: widget.store),
+                    const SizedBox(height: 14),
+                  ],
                   if (focus != null) ...[
                     _NextUpCard(
                       project: focus,
@@ -306,6 +311,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _showNewProject({String template = 'Wedding'}) async {
+    if (!await ensureCanEdit(context, widget.store) || !mounted) return;
     final titleController = TextEditingController();
     var selected = template;
     final created = await showModalBottomSheet<Project>(

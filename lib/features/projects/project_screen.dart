@@ -9,6 +9,7 @@ import '../../data/shotkit_store.dart';
 import '../export/export_screen.dart';
 import '../onset/onset_screen.dart';
 import '../scenes/scene_screen.dart';
+import '../unlock/unlock_sheet.dart';
 
 class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key, required this.store, required this.project});
@@ -130,8 +131,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                     '${scenes.length} $sceneWord',
                     trailing: scenes.length > 1
                         ? TextButton(
-                            onPressed: () =>
-                                setState(() => _reordering = !_reordering),
+                            onPressed: () => _toggleReorder(),
                             child: Text(_reordering ? 'Done' : 'Reorder'),
                           )
                         : null,
@@ -253,7 +253,13 @@ class _ProjectScreenState extends State<ProjectScreen> {
     );
   }
 
+  Future<void> _toggleReorder() async {
+    if (!_reordering && !await ensureCanEdit(context, widget.store)) return;
+    if (mounted) setState(() => _reordering = !_reordering);
+  }
+
   Future<void> _sceneActions(Scene scene) async {
+    if (!await ensureCanEdit(context, widget.store) || !mounted) return;
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
@@ -293,6 +299,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
   }
 
   Future<void> _showAddScene() async {
+    if (!await ensureCanEdit(context, widget.store) || !mounted) return;
     final title = TextEditingController();
     final location = TextEditingController();
     var tag = TimeOfDayTag.day;
