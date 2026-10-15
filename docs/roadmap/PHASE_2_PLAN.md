@@ -281,10 +281,14 @@ after.
 
 ### Monetization stance
 
-Stay **completely free** through phase 2. Revisit at about 1,000 installs. If we add revenue
-then, use an optional **one-time** "Supporter" unlock at $4.99–$9.99 for extras such as themes
-or advanced layouts. **Never** charge for save, export, PDF, or the number of projects or shots.
-Reviews show those paywalls are what users hate most.
+**Decided 2026-10-15 (1.1.1):** a 10-day free trial, then a **one-time lifetime unlock** at
+$2.99 (`shotkit_lifetime`). Installs from 1.0/1.1 are early supporters and stay free for life.
+After the trial the app goes **read-only**: viewing, On-set mode (marking shots done), PDF export
+and archiving stay free, so nobody is locked out of their own shot lists. Creating and editing
+projects, scenes and shots need the unlock. No subscription, no ads.
+
+This replaces the earlier plan to stay completely free until about 1,000 installs. The earlier
+reasoning still holds: never hold save, export or PDF behind the paywall.
 
 ---
 

@@ -9,13 +9,15 @@ ShotKit: Shot List Planner
 Changed in 1.1 from "ShotKit: Shot Planner". "Shot list" is the phrase every competing
 app ranks for, and ShotKit was not in the top results for it.
 
-### Short description — 77/80 characters
+### Short description — 72/80 characters
 
-Free offline shot list planner for filmmakers, videographers & wedding shoots
+Offline shot list planner for filmmakers, videographers & wedding shoots
+
+Changed in 1.1.1: dropped "Free" because new installs now pay after a 10-day trial.
 
 ### Full description
 
-ShotKit is a free, offline shot list planner for filmmakers, videographers and wedding shooters. Plan every shot before the shoot, then run your shot list on set — no account, no signal, no subscription.
+ShotKit is an offline shot list planner for filmmakers, videographers and wedding shooters. Plan every shot before the shoot, then run your shot list on set — no account, no signal, no subscription.
 
 PLAN EVERY SHOT
 
@@ -51,7 +53,7 @@ FEATURES
 • Detailed and compact PDF export
 • Works fully offline
 
-ShotKit is completely free: unlimited projects, scenes and shots, every template, and watermark-free PDFs. No in-app purchases.
+Try everything free for 10 days. Then unlock ShotKit for life with one payment: unlimited projects, scenes and shots, every template, and watermark-free PDFs. No subscription and no ads. After the trial your projects stay open, so you can always view them, run On-set mode and export PDFs.
 
 Plan the frame. Own the set.
 
@@ -82,6 +84,20 @@ three show the real UI:
 6. `06-pdf-export.png` — Share with your crew
 
 ## Release name and notes
+
+### 1.1.1
+
+Release name: `1.1.1 — Lifetime unlock`
+
+Release notes (367/500 characters):
+
+ShotKit now has a lifetime unlock.
+
+• Already using ShotKit? Nothing changes: everything stays free for you, for life. Thank you!
+• New installs get a 10-day free trial, then one payment unlocks ShotKit for life. No subscription.
+• After the trial, your projects stay open: view them, run On-set mode and export PDFs anytime.
+
+Ideas or bugs? Open Kit → Send feedback.
 
 ### 1.1.0
 

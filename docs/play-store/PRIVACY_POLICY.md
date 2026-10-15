@@ -1,6 +1,6 @@
 # ShotKit Privacy Policy
 
-Effective date: 24 July 2026
+Effective date: 15 October 2026
 
 ShotKit is provided by Habibul Hasan ("we", "us", or "our"). This policy explains how the ShotKit Android application handles information.
 
@@ -10,7 +10,9 @@ ShotKit stores projects, scenes, shot details, notes, preferences, and completio
 
 ## Purchases
 
-ShotKit is completely free. It contains no in-app purchases, subscriptions, or paid features.
+ShotKit includes a 10-day free trial. After the trial, an optional one-time in-app purchase ("Lifetime unlock") keeps creating and editing projects available. Without it, you can still open your projects, use On-set mode, and export PDFs.
+
+Purchases are processed by Google Play under Google's terms and privacy policy. ShotKit does not receive or store your payment details. To know whether you bought the unlock, the app asks Google Play which ShotKit purchases your Google account owns and keeps a note of the result on your device. No purchase information is sent to us.
 
 ## Exporting and sharing
 
@@ -18,7 +20,7 @@ When you create or share a PDF, the file is generated on your device. Sharing oc
 
 ## Data collection, advertising, and analytics
 
-The current version of ShotKit does not include advertising SDKs, analytics SDKs, crash-reporting SDKs, user accounts, or developer-operated cloud synchronization. We do not sell user data.
+The current version of ShotKit does not include advertising SDKs, analytics SDKs, crash-reporting SDKs, user accounts, or developer-operated cloud synchronization. Google Play's billing library is included only to sell and restore the lifetime unlock. We do not sell user data.
 
 ## Permissions
 

@@ -16,7 +16,10 @@ An Android-first, offline-first shot list and on-set companion for filmmakers.
   preview, printing and sharing
 - In-app review prompt after a wrapped scene or shared PDF (from the third
   app open, at most every 90 days)
-- Completely free: no accounts, ads, analytics or in-app purchases
+- 10-day free trial, then a one-time lifetime unlock through Google Play.
+  Installs from 1.0/1.1 stay free. After the trial, projects stay viewable,
+  shootable and exportable; only planning needs the unlock
+- No accounts, ads or analytics
 
 Fonts: Archivo and JetBrains Mono, bundled under the SIL Open Font License
 (`assets/fonts/`).
