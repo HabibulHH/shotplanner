@@ -4,8 +4,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shotkit/data/app_database.dart';
 import 'package:shotkit/data/models.dart';
 import 'package:shotkit/data/shotkit_store.dart';
+import 'package:shotkit/data/unlock_service.dart';
 
 void main() {
+  test('read-only mode blocks planning but not shooting', () async {
+    var now = DateTime.now();
+    final store = ShotKitStore(
+      database: AppDatabase(NativeDatabase.memory()),
+      clock: () => now,
+    );
+    await store.ready;
+    final project = await store.addProject('Test', 'Wedding');
+    final scene = project.scenes.first;
+    final shot = scene.shots.first;
+
+    now = now.add(UnlockService.trialLength + const Duration(minutes: 1));
+    expect(store.unlock.canEdit, isFalse);
+    await expectLater(store.addProject('More', 'Blank'), throwsStateError);
+    await expectLater(store.deleteShot(project, scene, shot), throwsStateError);
+    expect(scene.shots, contains(shot));
+
+    await store.toggleShot(project, scene, shot);
+    expect(shot.isDone, isTrue);
+    await store.archiveProject(project);
+    expect(project.isArchived, isTrue);
+    store.dispose();
+  });
+
   test('persists shot completion and reorder into SQLite', () async {
     final database = AppDatabase(NativeDatabase.memory());
     final store = ShotKitStore(database: database);

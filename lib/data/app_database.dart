@@ -57,6 +57,10 @@ class AppSettings extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  /// When this database was first created. The trial counts from here, and
+  /// installs from before the trial existed don't have it.
+  static const installedAtKey = 'installedAt';
+
   @override
   int get schemaVersion => 1;
 
@@ -66,7 +70,12 @@ class AppDatabase extends _$AppDatabase {
           await migrator.createAll();
           await customStatement('PRAGMA foreign_keys = ON');
         },
-        beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+          if (details.wasCreated) {
+            await setSetting(installedAtKey, DateTime.now().toIso8601String());
+          }
+        },
       );
 
   Future<String?> setting(String key) async =>

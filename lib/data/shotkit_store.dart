@@ -2,23 +2,32 @@ import 'dart:async';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'app_database.dart';
 import 'media_service.dart';
 import 'models.dart';
 import 'review_prompter.dart';
 import 'templates.dart';
+import 'unlock_service.dart';
 
 class ShotKitStore extends ChangeNotifier {
-  ShotKitStore({AppDatabase? database}) : database = database ?? AppDatabase() {
+  ShotKitStore({
+    AppDatabase? database,
+    InAppPurchase? billing,
+    DateTime Function()? clock,
+  }) : database = database ?? AppDatabase() {
     media = MediaService();
     reviews = ReviewPrompter(this.database);
+    unlock = UnlockService(this.database, billing: billing, clock: clock)
+      ..addListener(notifyListeners);
     ready = _load();
   }
 
   final AppDatabase database;
   late final MediaService media;
   late final ReviewPrompter reviews;
+  late final UnlockService unlock;
   final List<Project> projects = [];
   late final Future<void> ready;
   int _nextId = 1000;
@@ -94,8 +103,18 @@ class ShotKitStore extends ChangeNotifier {
           .map((shot) => shot.id),
     ];
     if (ids.isNotEmpty) _nextId = ids.reduce((a, b) => a > b ? a : b) + 1;
+    await unlock.load();
+    unawaited(unlock.connect());
     await reviews.recordOpen();
     notifyListeners();
+  }
+
+  /// Backstop for the unlock sheet the screens show before planning actions.
+  /// Marking shots done and archiving stay open in read-only mode.
+  void _requireEdit() {
+    if (!unlock.canEdit) {
+      throw StateError('ShotKit is read-only until the lifetime unlock.');
+    }
   }
 
   Future<void> toggleShot(Project project, Scene scene, Shot shot) async {
@@ -111,6 +130,7 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<void> addShot(Project project, Scene scene, Shot shot) async {
+    _requireEdit();
     scene.shots.add(shot);
     project.updatedLabel = 'Just now';
     notifyListeners();
@@ -135,6 +155,7 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<void> updateShot(Project project, Shot shot) async {
+    _requireEdit();
     await (database.update(database.dbShots)
           ..where((row) => row.id.equals(shot.id)))
         .write(
@@ -156,6 +177,7 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<void> deleteShot(Project project, Scene scene, Shot shot) async {
+    _requireEdit();
     scene.shots.remove(shot);
     notifyListeners();
     await (database.delete(database.dbShots)
@@ -192,6 +214,7 @@ class ShotKitStore extends ChangeNotifier {
 
   /// Moves the shot at [from] so it ends up at index [to].
   Future<void> moveShot(Scene scene, int from, int to) async {
+    _requireEdit();
     if (scene.shots.isNotEmpty && from != to) {
       final shot = scene.shots.removeAt(from);
       scene.shots.insert(to, shot);
@@ -210,6 +233,7 @@ class ShotKitStore extends ChangeNotifier {
 
   Future<Scene> addScene(
       Project project, String title, String location, TimeOfDayTag tag) async {
+    _requireEdit();
     final scene = Scene(
         id: nextId(),
         title: title,
@@ -234,6 +258,7 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<void> duplicateScene(Project project, Scene source) async {
+    _requireEdit();
     final scene = Scene(
       id: nextId(),
       title: '${source.title} copy',
@@ -271,6 +296,7 @@ class ShotKitStore extends ChangeNotifier {
 
   /// Moves the scene at [from] so it ends up at index [to].
   Future<void> moveScene(Project project, int from, int to) async {
+    _requireEdit();
     final scene = project.scenes.removeAt(from);
     project.scenes.insert(to, scene);
     notifyListeners();
@@ -287,6 +313,7 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<void> deleteScene(Project project, Scene scene) async {
+    _requireEdit();
     project.scenes.remove(scene);
     notifyListeners();
     await (database.delete(database.dbScenes)
@@ -305,6 +332,7 @@ class ShotKitStore extends ChangeNotifier {
   }
 
   Future<Project> addProject(String title, String template) async {
+    _requireEdit();
     final project = Project(
       id: nextId(),
       title: title,
@@ -396,6 +424,7 @@ class ShotKitStore extends ChangeNotifier {
 
   @override
   void dispose() {
+    unlock.dispose();
     unawaited(database.close());
     super.dispose();
   }

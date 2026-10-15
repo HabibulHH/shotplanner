@@ -138,6 +138,9 @@ Future<({ShotKitStore store, Project wedding})> _seed({
   await store.ready;
   await store.database.setSetting('keepAwake', 'false');
   await store.database.setSetting('onsetDaylight', '$daylight');
+  // Store screenshots show the app without the trial banner.
+  await store.database.setSetting('lifetimeOwned', 'true');
+  await store.unlock.load();
 
   final archived = await store.addProject('Rafi & Mitu Engagement', 'Wedding');
   await store.archiveProject(archived);
