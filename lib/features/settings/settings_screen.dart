@@ -154,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const HazardStripe(),
                       const SizedBox(height: 14),
                       Text(
-                        'SHOTKIT · BUILD 1.1.0\nMade for the set, not the cloud.',
+                        'SHOTKIT · BUILD 1.1.1\nMade for the set, not the cloud.',
                         textAlign: TextAlign.center,
                         style: ShotKitText.mono(size: 10.5, height: 1.7),
                       ),
